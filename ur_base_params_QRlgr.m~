@@ -114,7 +114,7 @@ pi_lgr_base2 = [eye(bb) beta]*[pi1;pi2];
 pi_lgr_base3 = [eye(bb) beta]*E'*pi_lgr_sym;
 
 % Relationship needed for identifcation using physical feasibility
-% %{
+%{
 KG = [eye(bb) beta; zeros(size(W,2)-bb,bb) eye(size(W,2)-bb)];
 G = KG*E';
 invG = E*[eye(bb) -beta; zeros(size(W,2)-bb,bb) eye(size(W,2)-bb)];
@@ -123,16 +123,12 @@ vpa(we,3)
 wr = invG*we;
 %}
 
-
+return
 % -----------------------------------------------------------------------
 % Validation of obtained mappings
 % -----------------------------------------------------------------------
 fprintf('Validation of mapping from standard parameters to base ones\n')
-if includeMotorDynamics
-    ur10.pi = rand(nLnkPrms*nLnks, 1);
-else
-    ur10.pi = reshape(ur10.pi,[60,1]);
-end
+ur10.pi = reshape(ur10.pi,[60,1]);
 
 % On random positions, velocities, aceeleations
 for i = 1:100
@@ -145,6 +141,7 @@ for i = 1:100
     else
         Yi = full_regressor_UR10E(q_rnd,qd_rnd,q2d_rnd);
     end
+    Yi = full_regressor_UR10E(q_rnd, qd_rnd, q2d_rnd);
     tau_full = Yi*ur10.pi;
     
     pi_lgr_base = [eye(bb) beta]*E'*ur10.pi;
