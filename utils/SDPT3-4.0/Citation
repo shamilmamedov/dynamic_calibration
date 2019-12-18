@@ -1,0 +1,19 @@
+SDPT3 Version 4.0
+A MATLAB software for semidefinite-quadratic-linear programming
+Copyright (c) 1997 by
+Kim-Chuan Toh, Michael J. Todd, and Reha H. Tutuncu
+
+If you find this software useful for your work, please cite the 
+followings: 
+
+[1] K.C. Toh, M.J. Todd, and R.H. Tutuncu, 
+    SDPT3 --- a Matlab software package for semidefinite programming, 
+    Optimization Methods and Software, 11 (1999), pp. 545--581. 
+[2] R.H Tutuncu, K.C. Toh, and M.J. Todd, 
+    Solving semidefinite-quadratic-linear programs using SDPT3, 
+    Mathematical Programming Ser. B, 95 (2003), pp. 189--217. 
+
+
+
+
+

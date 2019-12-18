@@ -1,0 +1,24 @@
+SDPT3 Version 4.0
+A MATLAB software for semidefinite-quadratic-linear programming
+Copyright (c) 1997 by
+Kim-Chuan Toh, Michael J. Todd, and Reha H. Tutuncu
+
+This version of the above software is distributed under the GNU General Public License 2.0. 
+
+For commercial applications that may be incompatible with this license, 
+please contact the authors to discuss alternatives.
+
+This software is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License 2.0
+as published by the Free Software Foundation Inc., 
+51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+
+
+
+

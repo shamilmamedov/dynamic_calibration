@@ -1,0 +1,1 @@
+For demos, please see the extensive on-line manual yalmip.github.io
