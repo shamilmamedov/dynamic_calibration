@@ -4,6 +4,8 @@
 % ---------------------------------------------------------------------
 run('main_ur.m'); % get robot description
 
+load('baseQR.mat'); % load mapping from full parameters to base parameters
+
 % Choose optimization algorithm: 'patternsearch', 'ga'
 optmznAlgorithm = 'patternsearch';
 
@@ -22,16 +24,10 @@ for i = 1:6
     q_max(i) = str2double(ur10.robot.joint{i}.limit.Attributes.upper);
     qd_max(i) = str2double(ur10.robot.joint{i}.limit.Attributes.velocity);
 end
-
 ur10.rot_axes = rot_axes; % axis of rotation of each joint
 ur10.T_pj = T_pj;
 ur10.r_com = r_com;
-ur10.qd_max = qd_max;
-ur10.q2d_max = 2*ones(6,1);
-% Use different limit for positions for safety
-ur10.q_min = deg2rad([-180 -180 -90 -180 -90 -90]');
-ur10.q_max = deg2rad([180 0 90 0 90 90]');
-ur10.q0 = deg2rad([0 -90 0 -90 0 0 ]');
+
 
 % Trajectory parameters
 traj_par.T = 20;          % period of signal
@@ -39,7 +35,12 @@ traj_par.wf = 2*pi/traj_par.T;    % fundamental frequency
 traj_par.t_smp = 1e-1;   % sampling time
 traj_par.t = 0:traj_par.t_smp:traj_par.T;  % time
 traj_par.N = 5;          % number of harmonics
-
+traj_par.q0 = deg2rad([0 -90 0 -90 0 0 ]');
+% Use different limit for positions for safety
+traj_par.q_min = deg2rad([-180 -180 -90 -180 -90 -90]');
+traj_par.q_max = deg2rad([180 0 90 0 90 90]');
+traj_par.qd_max = qd_max;
+traj_par.q2d_max = 2*ones(6,1);
 
 %  ----------------------------------------------------------------------
 % Otimization
@@ -53,10 +54,11 @@ if strcmp(optmznAlgorithm, 'patternsearch')
     optns_pttrnSrch = optimoptions('patternsearch');
     optns_pttrnSrch.Display = 'iter';
     optns_pttrnSrch.StepTolerance = 1e-3;
+    optns_pttrnSrch.MaxFunctionEvaluations = 1e+6;
 
-    [x,fval] = patternsearch(@(x)traj_cost_lgr(x,traj_par,ur10), x0, ...
+    [x,fval] = patternsearch(@(x)traj_cost_lgr(x,traj_par,baseQR), x0, ...
                              A, b, Aeq, beq, lb, ub, ...
-                             @(x)traj_cnstr(x,traj_par,ur10), optns_pttrnSrch);
+                             @(x)traj_cnstr(x,traj_par), optns_pttrnSrch);
               
 elseif strcmp(optmznAlgorithm, 'ga')
     optns_ga = optimoptions('ga');
@@ -67,9 +69,9 @@ elseif strcmp(optmznAlgorithm, 'ga')
     optns_ga.InitialPopulationRange = [-100; 100];
     optns_ga.SelectionFcn = 'selectionroulette';
 
-    [x,fval] = ga(@(x)traj_cost_lgr(x,traj_par,ur10), 6*2*traj_par.N,...
+    [x,fval] = ga(@(x)traj_cost_lgr(x,traj_par,baseQR), 6*2*traj_par.N,...
                   A, b, Aeq, beq, lb, ub, ...
-                  @(x)traj_cnstr(x,traj_par,ur10),optns_ga);
+                  @(x)traj_cnstr(x,traj_par),optns_ga);
 else
     error('Chosen algorithm is not found among implemented ones');
 end
