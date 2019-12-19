@@ -1,5 +1,3 @@
-% Get robot description
-run('main_ur.m')
 % -----------------------------------------------------------------------
 % 
 % Getting base parameters of the UR10 manipulator based on the 
@@ -11,10 +9,13 @@ run('main_ur.m')
 % Here we tried to generilize what was given there to more general
 % parametrization compared to their modified DH parameters.
 % ------------------------------------------------------------------------
+% Get robot description
+run('main_ur.m')
 
-% -----------------------------------------------------------------------
+generateBaseRegressorFunction = 0;
+generateBaseDynamicsFunctions = 0;
+
 % Create symbolic parameters
-% -----------------------------------------------------------------------
 m = sym('m%d',[6,1],'real');
 hx = sym('h%d_x',[6,1],'real');
 hy = sym('h%d_y',[6,1],'real');
@@ -36,9 +37,7 @@ for i = 1:6
                         hx(i),hy(i),hz(i),m(i)]';
 end
 
-% ------------------------------------------------------------------------
 % Symbolic generilized coordiates, their first and second deriatives
-% -----------------------------------------------------------------------
 q_sym = sym('q%d',[6,1],'real');
 qd_sym = sym('qd%d',[6,1],'real');
 q2d_sym = sym('q2d%d',[6,1],'real');
@@ -75,72 +74,14 @@ for i = 1:6
     v_kk(:,i+1) = T_pk(1:3,1:3,i)'*(v_kk(:,i) + cross(w_kk(:,i),sym(p_pj)));
     g_kk(:,i+1) = T_pk(1:3,1:3,i)'*g_kk(:,i);
     p_kk(:,i+1) = T_pk(1:3,1:3,i)'*(p_kk(:,i) + sym(p_pj));
-        
-    K_reg(i,:) = [sym(0.5)*w2wtlda(w_kk(:,i+1)),...
-                    v_kk(:,i+1)'*vec2skewSymMat(w_kk(:,i+1)),...
-                    sym(0.5)*v_kk(:,i+1)'*v_kk(:,i+1)];
-    P_reg(i,:) = [sym(zeros(1,6)), g_kk(:,i+1)',...
-                    g_kk(:,i+1)'*p_kk(:,i+1)];
-                    
+                           
     lmda(:,:,i) = getLambda(T_pk(1:3,1:3,i),sym(p_pj));
     f(:,i) = getF(v_kk(:,i+1),w_kk(:,i+1),sym(jnt_axs_k),qd_sym(i));
     DK(:,i+1) = lmda(:,:,i)*DK(:,i) + qd_sym(i)*f(:,i);
     DP(:,i+1) = lmda(:,:,i)*DP(:,i);
 end
 
-% ---------------------------------------------------------
-% Kinetic and potential energy of the load
-% ---------------------------------------------------------
-% Transformation from link 6 frame to end-effector frame
-rpy_ee = sym(str2num(ur10.robot.joint{7}.origin.Attributes.rpy));
-R_6ee = RPY(rpy_ee);
-R_6ee(abs(R_6ee)<sqrt(eps)) = sym(0); % to avoid numerical errors
-p_6ee = str2num(ur10.robot.joint{7}.origin.Attributes.xyz)';
-T_6ee = sym([R_6ee, p_6ee; zeros(1,3), 1]); % to avoid numerical errors
 
-w_eeee = T_6ee(1:3,1:3)'*w_kk(:,7);
-v_eeee = T_6ee(1:3,1:3)'*(v_kk(:,7) + cross(w_kk(:,i+1),sym(p_6ee)));
-g_eeee = T_6ee(1:3,1:3)'*g_kk(:,7);
-p_eeee = T_6ee(1:3,1:3)'*(p_kk(:,7) + sym(p_6ee));
-
-K_l = [sym(0.5)*w2wtlda(w_eeee), v_eeee'*vec2skewSymMat(w_eeee),...
-            sym(0.5)*(v_eeee'*v_eeee)];
-        
-P_l = [sym(zeros(1,6)), g_eeee', g_eeee'*p_eeee];
-
-% -----------------------------------------------------
-% Dynamic regressor of the load
-% -----------------------------------------------------
-Lagrl = K_l - P_l;
-dLagrl_dq = jacobian(Lagrl,q_sym)';
-dLagrl_dqd = jacobian(Lagrl,qd_sym)';
-tl = sym(zeros(6,10));
-for i = 1:6
-   tl = tl + diff(dLagrl_dqd,q_sym(i))*qd_sym(i)+...
-                diff(dLagrl_dqd,qd_sym(i))*q2d_sym(i);
-end
-Y_l = tl - dLagrl_dq;
-% matlabFunction(Y_l,'File','idntfcn/load_regressor_UR10E',...
-%                 'Vars',{q_sym,qd_sym,q2d_sym});
-
-% ----------------------------------------------------
-% Dynamic regressor of the full paramters
-% ----------------------------------------------------
-Lagrf = [K_reg(1,:) - P_reg(1,:), K_reg(2,:) - P_reg(2,:),...
-            K_reg(3,:) - P_reg(3,:), K_reg(4,:) - P_reg(4,:),...
-            K_reg(5,:) - P_reg(5,:), K_reg(6,:) - P_reg(6,:)];
-dLagrf_dq = jacobian(Lagrf,q_sym)';
-dLagrf_dqd = jacobian(Lagrf,qd_sym)';
-tf = sym(zeros(6,60));
-for i = 1:6
-   tf = tf + diff(dLagrf_dqd,q_sym(i))*qd_sym(i)+...
-                diff(dLagrf_dqd,qd_sym(i))*q2d_sym(i);
-end
-Y_f = tf - dLagrf_dq;
-matlabFunction(Y_f,'File','autogen/full_regressor_UR10E',...
-                'Vars',{q_sym,qd_sym,q2d_sym});
-
-return
 % -----------------------------------------------------------------------
 % Regrouping parameters of the links
 % -----------------------------------------------------------------------
@@ -159,6 +100,7 @@ for i = 6:-1:2
             group(pi_prv_sym, pir_ur10_sym(:,i),lmda(:,:,i),z_kk(:,i));
 end
 pir_ur10_num = double(pir_ur10_num);
+
 
 % -----------------------------------------------------------------------
 % Getting base parameters
@@ -209,20 +151,23 @@ for i = 1:6
     pir_base_vctr = vertcat(pir_base_vctr,pir_base_num{i});
 end
 
+
 % -----------------------------------------------------------------------
 % Computing Regressor
 % -----------------------------------------------------------------------
 dLagr_dq = jacobian(grad_Lagr,q_sym)';
 dLagr_dqd = jacobian(grad_Lagr,qd_sym)';
 t1 = sym(zeros(6,length(pir_base_vctr)));
-% t1 = sym(zeros(6,42));
 for i = 1:6
    t1 = t1 + diff(dLagr_dqd,q_sym(i))*qd_sym(i)+...
                 diff(dLagr_dqd,qd_sym(i))*q2d_sym(i);
 end
 Y_hat = t1 - dLagr_dq;
-% matlabFunction(Y_hat,'File','idntfcn/base_regressor_UR10E',...
-%                 'Vars',{q_sym,qd_sym,q2d_sym});
+
+if generateBaseRegressorFunction
+    matlabFunction(Y_hat,'File','autogen/base_regressor_UR10E',...
+                   'Vars',{q_sym,qd_sym,q2d_sym});
+end
 
 % ------------------------------------------------------------
 % Finding mapping from standard parameters to base parameters
@@ -233,6 +178,7 @@ pi_ur10_base = [pir_base_sym{1};pir_base_sym{2};pir_base_sym{3};...
                 pir_base_sym{4};pir_base_sym{5};pir_base_sym{6}];
 dbase_dfull = jacobian(pi_ur10_base,pi_ur10_full);
 Kd = jacobian(pi_ur10_base - Pb*pi_ur10_full, Pd*pi_ur10_full);
+
 
 % --------------------------------------------------------------------
 % Computing matrices of dynamic equations of motion 
@@ -277,18 +223,19 @@ for i = 1:1:6
     end
 end
 
-% Generating matrices
-fprintf('Generating dynamic equatio elements:\n')
-%{
-fprintf('\t Mass matrix\n')
-matlabFunction(M_mtrx_sym,'File','autogen/M_mtrx_fcn','Vars',{q_sym,xi});
+if generateBaseDynamicsFunctions
+    fprintf('Generating dynamic equation elements:\n');
 
-fprintf('\t Matrix of Coriolis and Centrifugal Forces\n')
-matlabFunction(C_mtrx_sym,'File','autogen/C_mtrx_fcn','Vars',{q_sym,qd_sym,xi});
+    fprintf('\t Mass matrix\n');
+    matlabFunction(M_mtrx_sym,'File','autogen/M_mtrx_fcn','Vars',{q_sym,xi});
 
-fprintf('\t Vector of gravitational forces\n')
-matlabFunction(G_vctr_sym,'File','autogen/G_vctr_fcn','Vars',{q_sym,xi});
-%}
+    fprintf('\t Matrix of Coriolis and Centrifugal Forces\n');
+    matlabFunction(C_mtrx_sym,'File','autogen/C_mtrx_fcn','Vars',{q_sym,qd_sym,xi});
+
+    fprintf('\t Vector of gravitational forces\n');
+    matlabFunction(G_vctr_sym,'File','autogen/G_vctr_fcn','Vars',{q_sym,xi});
+end
+
 return
 % --------------------------------------------------------------------
 % Tests

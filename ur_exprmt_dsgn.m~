@@ -84,6 +84,12 @@ c_pol = getPolCoeffs(traj_par.T, a, b, traj_par.wf, traj_par.N, ur10.q0);
 [q,qd,q2d] = mixed_traj(traj_par.t, c_pol, a, b, traj_par.wf, traj_par.N);
 
 
+if strcmp(optmznAlgorithm, 'patternsearch')
+    strcat('N',num2str(traj_par.N),'T',num2str(traj_par.T))
+elseif strcmp(optmznAlgorithm, 'ga')
+    
+end
+
 figure
 subplot(3,1,1)
     plot(traj_par.t,q)
@@ -100,14 +106,3 @@ subplot(3,1,3)
     ylabel('$\ddot{q}$','interpreter','latex')
     grid on
     legend('q2d1','q2d2','q2d3','q2d4','q2d5','q2d6')
-
-    
-pathToFolder = 'trajectory_optmzn/';
-if strcmp(optmznAlgorithm, 'patternsearch')
-    t1 = strcat('N',num2str(traj_par.N),'T',num2str(traj_par.T));
-    filename = strcat(pathToFolder,'ptrnSrch_',t1,'.mat');
-elseif strcmp(optmznAlgorithm, 'ga')
-    t1 = strcat('N',num2str(traj_par.N),'T',num2str(traj_par.T));
-    filename = strcat(pathToFolder,'ga_',t1,'.mat');
-end
-save(filename,'a','b','c_pol','traj_par')

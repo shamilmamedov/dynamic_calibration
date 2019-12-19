@@ -129,9 +129,10 @@ wr = invG*we;
 % -----------------------------------------------------------------------
 fprintf('Validation of mapping from standard parameters to base ones\n')
 if includeMotorDynamics
-    ur10.pi = rand(nLnkPrms*nLnks, 1);
+    ur10.pi(end+1,:) = rand(1,nLnks);
+    ur10.pi = reshape(ur10.pi,[nLnkPrms*nLnks, 1]);
 else
-    ur10.pi = reshape(ur10.pi,[60,1]);
+    ur10.pi = reshape(ur10.pi,[nLnkPrms*nLnks, 1]);
 end
 
 % On random positions, velocities, aceeleations
