@@ -33,9 +33,11 @@ W = [];
 for i = 1:length(t)
 %     Y = base_regressor_UR10E(q(:,i),qd(:,i),q2d(:,i));
     if baseQR.motorDynamicsIncluded
-        Y = regressorWithMotorDynamics(q(:,i),qd(:,i),q2d(:,i))*E1;
+        Y = [regressorWithMotorDynamics(q(:,i),qd(:,i),q2d(:,i))*E1, ...
+             frictionRegressor(qd(:,i))];
     else
-        Y = full_regressor_UR10E(q(:,i),qd(:,i),q2d(:,i))*E1;
+        Y = [full_regressor_UR10E(q(:,i),qd(:,i),q2d(:,i))*E1, ...
+             frictionRegressor(qd(:,i))];
     end
     W = vertcat(W,Y);
 end
