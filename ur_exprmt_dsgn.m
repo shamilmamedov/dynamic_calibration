@@ -37,8 +37,8 @@ traj_par.t = 0:traj_par.t_smp:traj_par.T;  % time
 traj_par.N = 5;          % number of harmonics
 traj_par.q0 = deg2rad([0 -90 0 -90 0 0 ]');
 % Use different limit for positions for safety
-traj_par.q_min = deg2rad([-180 -180 -90 -180 -90 -90]');
-traj_par.q_max = deg2rad([180 0 90 0 90 90]');
+traj_par.q_min = -deg2rad([180  180  160   180  90   90]');
+traj_par.q_max =  deg2rad([180  0    160   0    90   90]');
 traj_par.qd_max = qd_max;
 traj_par.q2d_max = 2*ones(6,1);
 
@@ -124,7 +124,7 @@ subplot(3,1,3)
 pathToFolder = 'trajectory_optmzn/';
 t1 = strcat('N',num2str(traj_par.N),'T',num2str(traj_par.T));
 if strcmp(optmznAlgorithm, 'patternsearch')
-    filename = strcat(pathToFolder,'ptrnSrch_',t1,'QR.mat');
+    filename = strcat(pathToFolder,'ptrnSrch_',t1,'QR2.mat');
 elseif strcmp(optmznAlgorithm, 'ga')
     filename = strcat(pathToFolder,'ga_',t1,'.mat');
 elseif strcmp(optmznAlgorithm, 'fmincon')
