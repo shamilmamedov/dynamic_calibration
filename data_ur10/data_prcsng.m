@@ -1,4 +1,4 @@
-clc; clear all; close all;
+% clc; clear all; close all;
 
 % ------------------------------------------------------------------------
 % Load and calculate desired trajectory
@@ -13,7 +13,7 @@ load('ptrnSrch_N5T20QR.mat');
 traj_data = csvread('ur-19_12_23_free.csv');
 
 int_idx = 1; % get the point when the trajectory begins
-fnl_idx = 2016;
+fnl_idx = 2036;
 
 unloadedTrajectory = struct; % structure with trajectory data
 
@@ -28,10 +28,11 @@ unloadedTrajectory.tau_des = traj_data(int_idx:fnl_idx,26:31);
 % -----------------------------------------------------------------------
 % Load the real trajectory of the robot with load
 % -----------------------------------------------------------------------
-traj_ldd = csvread('ur-19_12_23_load.csv');
+% traj_ldd = csvread('ur-19_12_23_load.csv'); % load 1 kg
+traj_ldd = csvread('ur-20_01_13-load_2600.csv'); % load 2.6 kg
 
-int_idx_ldd = 1;
-fnl_idx_ldd = 2040;
+int_idx_ldd = 250;
+fnl_idx_ldd = 2274;
 
 loadedTrajectory = struct;
 
@@ -107,4 +108,20 @@ end
 for i = 1:6
     loadedTrajectory.i_fltrd(:,i) = filtfilt(curr_filt,loadedTrajectory.i(:,i));
 end
+
+
+%% ----------------------------
+%{
+noJoint = 1;
+
+figure
+hold on
+plot(unloadedTrajectory.t, unloadedTrajectory.i(:,noJoint))
+plot(unloadedTrajectory.t, unloadedTrajectory.i_fltrd(:,noJoint),'LineWidth',2)
+plot(loadedTrajectory.t, loadedTrajectory.i(:,noJoint))
+plot(loadedTrajectory.t, loadedTrajectory.i_fltrd(:,noJoint),'LineWidth',2)
+%}
+
+
+
 

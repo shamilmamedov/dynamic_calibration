@@ -162,6 +162,10 @@ if ~all(nrm_err1<1e-6)
     return
 end
 
+% ---------------------------------------------------------------------
+% Create structure with the result of QR decompositon and save it
+% for further use.
+% ---------------------------------------------------------------------
 baseQR = struct;
 baseQR.numberOfBaseParameters = bb;
 baseQR.permutationMatrix = E;

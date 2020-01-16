@@ -32,16 +32,15 @@ traj_par.t = 0:traj_par.t_smp:traj_par.T; % time
 [q,qd,q2d] = mixed_traj(traj_par.t,c_pol,a,b,traj_par.wf,traj_par.N);
 
 % add noise to data
-noiseVariance = 0.01;
+noiseVariance = 0.1;
 q = q + sqrt(noiseVariance)*rand(size(q));
 qd = qd + sqrt(noiseVariance)*rand(size(qd));
 q2d = q2d + sqrt(2*noiseVariance)*rand(size(q2d));
 
 % load and drive paramters
-pi_load =  [0.2,0.05,0.07,0.15,0.01,0.4, 0.05, 0, 0, 1.069]';
-K_drv = [11 13 15 10 12 14]';
-m_load = 1.069;
-
+m_load = 5;
+pi_load =  [0.2,0.05,0.07,0.15,0.01,0.4, 0.05, 0, 0, m_load]';
+K_drv = [20 16 13 10 9 8]';
 
 % Constracting regressor matrix for unloaded case
 Wb_uldd = []; I_uldd = []; 
@@ -49,11 +48,10 @@ for i = 1:1:length(traj_par.t)
     Y_ulddi = regressorWithMotorDynamics(q(:,i),qd(:,i),q2d(:,i));                              
     Yfrctni = frictionRegressor(qd(:,i));
     Ybi_uldd = [Y_ulddi*E1, Yfrctni];
-    taui_uldd = Ybi_uldd*ur10.pi_base;
+    taui_uldd = Ybi_uldd*ur10.pi_base + sqrt(noiseVariance)*rand(6,1);
         
     Wb_uldd = vertcat(Wb_uldd, Ybi_uldd);
-    I_uldd = vertcat(I_uldd, diag(diag(K_drv)\taui_uldd + ...
-                                sqrt(noiseVariance)*rand(6,1)));
+    I_uldd = vertcat(I_uldd, diag(diag(K_drv)\taui_uldd));
 end
 
 % Constracting regressor matrix for loaded case
@@ -61,75 +59,21 @@ Wb_ldd = []; Wl = []; I_ldd = [];
 for i = 1:1:length(traj_par.t)
     Y_lddi = regressorWithMotorDynamics(q(:,i),qd(:,i),q2d(:,i));                                
     Yfrctni = frictionRegressor(qd(:,i));
-    Yli = load_regressor_UR10E(q(:,i),qd(:,i),q2d(:,i));
     Ybi_ldd = [Y_lddi*E1, Yfrctni];
-    taui_ldd = [Ybi_ldd Yli]*[ur10.pi_base; pi_load];
+    Yli = load_regressor_UR10E(q(:,i),qd(:,i),q2d(:,i));
+    taui_ldd = [Ybi_ldd Yli]*[ur10.pi_base; pi_load] + ...
+                                        sqrt(noiseVariance)*rand(6,1);
     
     Wb_ldd = vertcat(Wb_ldd, Ybi_ldd);
     Wl = vertcat(Wl, Yli); 
-    I_ldd = vertcat(I_ldd, diag(diag(K_drv)\taui_ldd + ... 
-                                sqrt(0)*rand(6,1)));
+    I_ldd = vertcat(I_ldd, diag(diag(K_drv)\taui_ldd));
 end
-Wl_uknown = Wl(:,1:9);
-Wl_known = Wl(:,10); % mass of the load is known 
-
-
-%% Identification of parameters including drive gains
-Wb_ls = [I_uldd     -Wb_uldd    zeros(size(I_uldd,1), size(Wl_uknown,2));
-         I_ldd      -Wb_ldd     -Wl_uknown];
-     
-Yb_ts = [zeros(size(I_uldd,1),1); Wl_known*m_load];
-
-% Compute least squares solution
-pi_ls = ((Wb_ls'*Wb_ls)\Wb_ls')*Yb_ts;
-drvGains = [pi_ls(1:6) K_drv]
-
-G = zeros(6);
-for i = 1:6
-    Wib_ls = Wb_ls(i:6:end,:);
-    Yib_ls = Yb_ts(i:6:end);
-    sgmai_sqrd = norm(Yib_ls - Wib_ls*pi_ls,2)^2/(size(Wib_ls,1)-size(Wib_ls,2));
-    G(i,i) = 1/sgmai_sqrd;
-end
-
-for i = 1:6:size(Wb_ls,1)
-    Wb_ls(i:i+5,:) = G*Wb_ls(i:i+5,:);
-    Yb_ts(i:i+5) = G*Yb_ts(i:i+5);
-end
-pi_tot = ((Wb_ls'*Wb_ls)\Wb_ls')*Yb_ts;
-drvGains = pi_tot(1:6)
-
-
+Wl_uknown = Wl(:,1:9); % regressor matrix of the unknown load params
+Wl_known = Wl(:,10); % regressor matrix of the known load params
 nmbrRwsUnldd = size(Wb_uldd,1);
-G_uldd = zeros(6);
-G_ldd = zeros(6);
-for i = 1:6
-    Wib_uldd = Wb_ls(i:6:nmbrRwsUnldd,:);
-    Yib_uldd = Yb_ts(i:6:nmbrRwsUnldd);
-    sgmai_sqrd = norm(Yib_uldd - Wib_uldd*pi_ls,2)^2/(size(Wib_uldd,1)-rank(Wib_uldd));
-    G_uldd(i,i) = 1/sgmai_sqrd;
-    
-    Wib_ldd = Wb_ls(nmbrRwsUnldd+i:6:end,:);
-    Yib_ldd = Yb_ts(nmbrRwsUnldd+i:6:end);
-    sgmai_sqrd = norm(Yib_ldd - Wib_ldd*pi_ls,2)^2/(size(Wib_ldd,1)-rank(Wib_ldd));
-    G_ldd(i,i) = 1/sgmai_sqrd;
-end
+nmbrRwsLdd = size(Wb_ldd,1);
 
 
-for i = 1:6:size(Wb_uldd,1)
-    Wb_ls(i:i+5,:) = G_uldd*Wb_ls(i:i+5,:);
-    Yb_ts(i:i+5) = G_uldd*Yb_ts(i:i+5);
-    
-    Wb_ls(size(Wb_uldd,1)+i:i+5,:) = G_ldd*Wb_ls(size(Wb_uldd,1)+i:i+5,:);
-    Yb_ts(size(Wb_uldd,1)+i:i+5) = G_ldd*Yb_ts(size(Wb_uldd,1)+i:i+5);
-end
-pi_tot = ((Wb_ls'*Wb_ls)\Wb_ls')*Yb_ts;
-drvGains = pi_tot(1:6)
-
-
-
-
-return
 %% Using total least squares
 Wb_tls = [I_uldd   -Wb_uldd   zeros(size(I_uldd,1), size(Wl,2));
           I_ldd    -Wb_ldd    -Wl_uknown    -Wl_known*m_load];
@@ -147,7 +91,7 @@ G = zeros(6);
 for i = 1:6
     Wib_tls = Wb_tls(i:6:end,:);
     [~,Si,Vi] = svd(Wib_tls,'econ');
-    sgmai = Si(end,end)/sqrt((size(Wib_tls,1)-size(Wib_tls,2)));
+    sgmai = Si(end,end)/sqrt((size(Wib_tls,1)-rank(Wib_tls))); %size(Wib_tls,2)));
     G(i,i) = 1/sgmai^2;
 end
 
@@ -159,6 +103,86 @@ lmda = 1/V(end,end);
 pi_tls = lmda*V(:,end);
 drvGains = pi_tls(1:6)
 
+% Finding weighting matrix, joint by joint
+G = zeros(6);
+for i = 1:6
+    Wib_tls = Wb_tls(i:6:end,:);
+    [~,Si,Vi] = svd(Wib_tls,'econ');
+    sgmai = Si(end,end)/sqrt((size(Wib_tls,1)-rank(Wib_tls))); %size(Wib_tls,2)));
+    G(i,i) = 1/sgmai^2;
+end
+
+for i = 1:6:size(Wb_tls,1)
+    Wb_tls(i:i+5,:) = G*Wb_tls(i:i+5,:);
+end
+[~,~,V] = svd(Wb_tls,'econ');
+lmda = 1/V(end,end);
+pi_tls = lmda*V(:,end);
+drvGains = pi_tls(1:6)
+
+
+return
+%% Identification of parameters including drive gains
+Wb_ls = [I_uldd     -Wb_uldd    zeros(size(I_uldd,1), size(Wl_uknown,2));
+         I_ldd      -Wb_ldd     -Wl_uknown];
+     
+Yb_ts = [zeros(size(I_uldd,1),1); Wl_known*m_load];
+
+% Compute least squares solution
+pi_ls = ((Wb_ls'*Wb_ls)\Wb_ls')*Yb_ts;
+drvGains = [pi_ls(1:6) K_drv]
+
+
+% Find weighting matrix
+G = zeros(6);
+for i = 1:6
+    Wib_ls = Wb_ls(i:6:end,:);
+    Yib_ls = Yb_ts(i:6:end);
+    sgmai_sqrd = norm(Yib_ls - Wib_ls*pi_ls,2)^2/(size(Wib_ls,1)-size(Wib_ls,2));
+    G(i,i) = 1/sqrt(sgmai_sqrd);
+end
+
+% Weight data with weighting matrix
+for i = 1:6:size(Wb_ls,1)
+    Wb_ls(i:i+5,:) = G*Wb_ls(i:i+5,:);
+    Yb_ts(i:i+5) = G*Yb_ts(i:i+5);
+end
+pi_tot = ((Wb_ls'*Wb_ls)\Wb_ls')*Yb_ts;
+drvGains = pi_tot(1:6)
+
+
+
+G_uldd = zeros(6);
+G_ldd = zeros(6);
+for i = 1:6
+    Wib_uldd = Wb_ls(i:6:nmbrRwsUnldd,:);
+    Yib_uldd = Yb_ts(i:6:nmbrRwsUnldd);
+    sgmai_sqrd = norm(Yib_uldd - Wib_uldd*pi_ls,2)^2/(size(Wib_uldd,1)-rank(Wib_uldd));
+    G_uldd(i,i) = 1/sqrt(sgmai_sqrd);
+    
+    Wib_ldd = Wb_ls(nmbrRwsUnldd+i:6:end,:);
+    Yib_ldd = Yb_ts(nmbrRwsUnldd+i:6:end);
+    sgmai_sqrd = norm(Yib_ldd - Wib_ldd*pi_ls,2)^2/(size(Wib_ldd,1)-rank(Wib_ldd));
+    G_ldd(i,i) = 1/sqrt(sgmai_sqrd);
+end
+
+
+for i = 1:6:size(Wb_uldd,1)
+    Wb_ls(i:i+5,:) = G_uldd*Wb_ls(i:i+5,:);
+    Yb_ts(i:i+5) = G_uldd*Yb_ts(i:i+5);
+end
+
+for i = nmbrRwsUnldd+1:6:nmbrRwsUnldd+size(Wb_ldd,1)   
+    Wb_ls(i:i+5,:) = G_ldd*Wb_ls(i:i+5,:);
+    Yb_ts(i:i+5) = G_ldd*Yb_ts(i:i+5);
+end
+
+pi_tot = ((Wb_ls'*Wb_ls)\Wb_ls')*Yb_ts;
+drvGains = pi_tot(1:6)
+
+
+
+return
 
 %% Set-up SDP optimization procedure
 drv_gns = sdpvar(6,1); % variables for base paramters
@@ -462,3 +486,7 @@ function y_cur = low_pass_filter(u_cur,y_prev,alpha,beta,T)
     t2 = alpha*T;
     y_cur = 1/t1*y_prev + t2/t1*u_cur;
 end
+
+
+
+
