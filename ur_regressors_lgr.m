@@ -98,8 +98,8 @@ end
 % Dynamic regressor of the full paramters
 % ---------------------------------------------------------------------
 Lagrf = [beta_K(1,:) - beta_P(1,:), beta_K(2,:) - beta_P(2,:),...
-            beta_K(3,:) - beta_P(3,:), beta_K(4,:) - beta_P(4,:),...
-            beta_K(5,:) - beta_P(5,:), beta_K(6,:) - beta_P(6,:)];
+         beta_K(3,:) - beta_P(3,:), beta_K(4,:) - beta_P(4,:),...
+         beta_K(5,:) - beta_P(5,:), beta_K(6,:) - beta_P(6,:)];
 dLagrf_dq = jacobian(Lagrf,q_sym)';
 dLagrf_dqd = jacobian(Lagrf,qd_sym)';
 tf = sym(zeros(6,60));
@@ -113,3 +113,14 @@ if generateFullRegressorFunction
     matlabFunction(Y_f,'File','autogen/full_regressor_UR10E',...
                    'Vars',{q_sym,qd_sym,q2d_sym});
 end
+
+% -------------------------------------------------------------------
+% Dynamics matrices of the robot
+% -------------------------------------------------------------------
+pi_sndrd_sym = sym('pi%d%d',[60,1],'real');
+t1 = [beta_P(1,:), beta_P(2,:), beta_P(3,:), beta_P(4,:),...
+      beta_P(5,:), beta_P(6,:)];
+G_vctr_sym = jacobian(t1, q_sym)'*pi_sndrd_sym;
+
+matlabFunction(G_vctr_sym, 'File','autogen/G_vctr_fcn2',...
+                   'Vars',{q_sym, pi_sndrd_sym}, 'Optimize',false);

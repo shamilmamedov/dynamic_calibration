@@ -76,31 +76,48 @@ if TEST_DYNAMICS
     rbt = importrobot('ur10e.urdf');
     rbt.DataFormat = 'column';
     rbt.Gravity = [0 0 -9.81];
-
-    for i = 1:100
+    
+    load('baseQR');
+    
+    noIter = 100;
+    err1 = zeros(noIter,1); err2 = zeros(noIter,1); 
+    err3 = zeros(noIter,1); err4 = zeros(noIter,1);
+    for i = 1:noIter
         q = rand(6,1);
-        q_d = rand(6,1);
-        q_2d = rand(6,1);
+        q_d = zeros(6,1);
+        q_2d = zeros(6,1);
 
         [M,C,G] = screw_MCG(q,q_d,ur10);
-        Y = screw_regressor(q,q_d,q_2d,ur10);
-
+        Yscrw = screw_regressor(q,q_d,q_2d,ur10);
+        Ylgr = full_regressor_UR10E(q,q_d,q_2d);
+        
         tau1 = M*q_2d + C*q_d + G;
-        tau2 = Y*reshape(ur10.pi_scrw,[60,1]);
+        tau2 = Yscrw*reshape(ur10.pi_scrw,[60,1]);
         tau3 = inverseDynamics(rbt,q,q_d,q_2d);
-
+        tau4 = Ylgr*reshape(ur10.pi,[60,1]);
+        tau5 = G_vctr_fcn2(q, reshape(ur10.pi,[60,1]));
+        
     %   verifying if regressor is computed correctly  
-        err1(i) = norm(tau1 - tau2);
+        err1(i) = norm(tau3 - tau1);
     %   verifying if our inverse dynamics coincides with matlabs
-        err2(i) = norm(tau1 - tau3);
+        err2(i) = norm(tau3 - tau2);
+        err3(i) = norm(tau3 - tau4);
+        err4(i) = norm(tau3 - tau5);
     end
 
     figure
-    plot(err1)
-    hold on
-    plot(err2)
-    grid on
-    legend('MCG-Y','MCG-invDnmcsMatlab')
+    subplot(2,1,1)
+        plot(err1)
+        hold on
+        plot(err2)
+        legend('||\Delta MCG||', '||\Delta Yscrw||')
+        grid on
+    subplot(2,1,2)
+        plot(err3)
+        hold on
+        plot(err4)
+        legend('||\Delta Ylgr||', '||\Delta MCG||')
+        grid on
 end
 
 
