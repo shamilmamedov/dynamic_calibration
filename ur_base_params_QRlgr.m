@@ -86,7 +86,7 @@ bb = rank(W);
 % R = [R1 R2; 
 %      0  0]
 % R1 is bbxbb upper triangular and reguar matrix
-% R2 is bbx(c-bb) matrix where c is number of identifiable parameters
+% R2 is bbx(c-bb) matrix where c is number of standard parameters
 R1 = R(1:bb,1:bb);
 R2 = R(1:bb,bb+1:end);
 beta = R1\R2; % the zero rows of K correspond to independent columns of WP

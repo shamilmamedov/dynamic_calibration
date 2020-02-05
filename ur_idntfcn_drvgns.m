@@ -3,10 +3,12 @@ clc; clear all; close all;
 % ------------------------------------------------------------------------
 % Load data and procces it (filter and estimate accelerations)
 % ------------------------------------------------------------------------
-unloadedTrajectory = parseURData('ur-19_12_23_free.csv', 1, 2036);
+% unloadedTrajectory = parseURData('ur-19_12_23_free.csv', 1, 2036);
+unloadedTrajectory = parseURData('ur-20_01_31-unload.csv', 300, 2623);
 unloadedTrajectory = filterData(unloadedTrajectory);
 
-loadedTrajectory = parseURData('ur-20_01_13-load_2600.csv', 250, 2274);
+% loadedTrajectory = parseURData('ur-20_01_13-load_2600.csv', 250, 2274);
+loadedTrajectory = parseURData('ur-20_01_31-load.csv', 370, 2881);
 loadedTrajectory = filterData(loadedTrajectory);
 
 % ------------------------------------------------------------------------
@@ -16,7 +18,8 @@ loadedTrajectory = filterData(loadedTrajectory);
 % load('full2base_mapping.mat');
 load('baseQR.mat'); % load mapping from full parameters to base parameters
 E1 = baseQR.permutationMatrix(:,1:baseQR.numberOfBaseParameters);
-m_load = 2.602; 
+m_load = 2.805; 
+% m_load = 2.602; 
 
 % Constracting regressor matrix for unloaded case
 Wb_uldd = []; I_uldd = []; 
@@ -165,7 +168,6 @@ sol = optimize(cnstr,obj,sdpsettings('solver','sdpt3'));
 % Getting values of the estimated patamters
 drvGainsSDP = value(drv_gns)
 
-return
 %% Saving obtained drive gains
 drvGains = drvGainsSDP;
 filename = 'driveGains.mat';

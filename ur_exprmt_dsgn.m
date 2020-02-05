@@ -8,6 +8,7 @@ load('baseQR.mat'); % load mapping from full parameters to base parameters
 
 % Choose optimization algorithm: 'patternsearch', 'ga', 'fmincon'
 optmznAlgorithm = 'patternsearch';
+searchOnlyForFeasibleSolution = 1;
 
 % Getting limits on posistion and velocities. Moreover we get some
 % constant parmeters of the robot that allow us to accelerate computation
@@ -30,17 +31,17 @@ ur10.r_com = r_com;
 
 
 % Trajectory parameters
-traj_par.T = 20;          % period of signal
+traj_par.T = 25;          % period of signal
 traj_par.wf = 2*pi/traj_par.T;    % fundamental frequency
-traj_par.t_smp = 1e-1;   % sampling time
+traj_par.t_smp = 2e-1;   % sampling time
 traj_par.t = 0:traj_par.t_smp:traj_par.T;  % time
-traj_par.N = 5;          % number of harmonics
+traj_par.N = 7;          % number of harmonics
 traj_par.q0 = deg2rad([0 -90 0 -90 0 0 ]');
 % Use different limit for positions for safety
-traj_par.q_min = -deg2rad([180  180  160   180  90   90]');
-traj_par.q_max =  deg2rad([180  0    160   0    90   90]');
+traj_par.q_min = -deg2rad([180  180  100   180  90   90]');
+traj_par.q_max =  deg2rad([180  0    100   0    90   90]');
 traj_par.qd_max = qd_max;
-traj_par.q2d_max = 2*ones(6,1);
+traj_par.q2d_max = [2 1 1 1 1 2.5]';
 
 %  ----------------------------------------------------------------------
 % Otimization
@@ -50,19 +51,26 @@ Aeq = []; beq = [];
 lb = []; ub = [];
 
 if strcmp(optmznAlgorithm, 'patternsearch')
-    x0 = rand(6*2*traj_par.N,1);
+    load('ptrnSrch_N7T25QR.mat')
+%     x0 = rand(6*2*traj_par.N,1);
+    x0 = reshape([a b], [6*2*traj_par.N, 1]); 
     optns_pttrnSrch = optimoptions('patternsearch');
     optns_pttrnSrch.Display = 'iter';
-    optns_pttrnSrch.StepTolerance = 1e-3;
-    optns_pttrnSrch.FunctionTolerance = 1;
+    optns_pttrnSrch.StepTolerance = 1e-1;
+    optns_pttrnSrch.FunctionTolerance = 10;
+    optns_pttrnSrch.ConstraintTolerance = 1e-6;
     optns_pttrnSrch.MaxTime = inf;
     optns_pttrnSrch.MaxFunctionEvaluations = 1e+6;
     
-
+    if searchOnlyForFeasibleSolution
+    [x,fval] = patternsearch(@(x)0, x0, A, [], Aeq, beq, lb, ub, ...
+                             @(x)traj_cnstr_fsblty(x, traj_par, baseQR), ...
+                             optns_pttrnSrch);    
+    else
     [x,fval] = patternsearch(@(x)traj_cost_lgr(x,traj_par,baseQR), x0, ...
                              A, b, Aeq, beq, lb, ub, ...
                              @(x)traj_cnstr(x,traj_par), optns_pttrnSrch);
-              
+    end          
 elseif strcmp(optmznAlgorithm, 'ga')
     optns_ga = optimoptions('ga');
     optns_ga.Display = 'iter';
@@ -120,14 +128,16 @@ subplot(3,1,3)
     grid on
     legend('q2d1','q2d2','q2d3','q2d4','q2d5','q2d6')
 
-    
+%%
+% %{
 pathToFolder = 'trajectory_optmzn/';
 t1 = strcat('N',num2str(traj_par.N),'T',num2str(traj_par.T));
 if strcmp(optmznAlgorithm, 'patternsearch')
-    filename = strcat(pathToFolder,'ptrnSrch_',t1,'QR2.mat');
+    filename = strcat(pathToFolder,'ptrnSrch_',t1,'QR.mat');
 elseif strcmp(optmznAlgorithm, 'ga')
     filename = strcat(pathToFolder,'ga_',t1,'.mat');
 elseif strcmp(optmznAlgorithm, 'fmincon')
     filename = strcat(pathToFolder,'fmncn_',t1,'.mat');
 end
 save(filename,'a','b','c_pol','traj_par')
+%}

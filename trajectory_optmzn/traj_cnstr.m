@@ -1,4 +1,4 @@
-function [c,ceq] = traj_cnstr(opt_vars,traj_par)
+function [c,ceq] = traj_cnstr(opt_vars, traj_par)
 % --------------------------------------------------------------------
 % The function computes constraints on trajectory for trajectoty
 % optimization needed for dynamic parameter identification

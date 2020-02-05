@@ -4,6 +4,7 @@ clc; clear all; close all;
 % Load data and procces it (filter and estimate accelerations)
 % ------------------------------------------------------------------------
 unloadedTrajectory = parseURData('ur-19_12_23_free.csv', 1, 2005);
+% unloadedTrajectory = parseURData('ur-20_01_31-unload.csv', 300, 2623);
 unloadedTrajectory = filterData(unloadedTrajectory);
 
 % ------------------------------------------------------------------------
@@ -18,11 +19,11 @@ E1 = baseQR.permutationMatrix(:,1:baseQR.numberOfBaseParameters);
 load('driveGains.mat')
 % drvGains = [14.87; 13.26; 11.13; 10.62; 11.03; 11.47]; % deLuca gains
 % drvGains = [11.1272; 11.83; 9.53; 12.64; 10.24; 5.53];
-
+% drvGains = [15.87; 11.83; 9.53; 11.92; 15.24; 18.47];
 
 %Constracting regressor matrix
 Wb_uldd = []; Tau_uldd = []; 
-for i = 1:2:length(unloadedTrajectory.t)
+for i = 1:1:length(unloadedTrajectory.t)
      Y_ulddi = regressorWithMotorDynamics(unloadedTrajectory.q(i,:)',...
                                           unloadedTrajectory.qd_fltrd(i,:)',...
                                           unloadedTrajectory.q2d_est(i,:)');
@@ -31,8 +32,15 @@ for i = 1:2:length(unloadedTrajectory.t)
     
     Wb_uldd = vertcat(Wb_uldd, Ybi_uldd);
     Tau_uldd = vertcat(Tau_uldd, diag(drvGains)*unloadedTrajectory.i_fltrd(i,:)');
-%     Tau_uldd = vertcat(Tau_uldd, unloadedTrajectory.tau_des(i,:)');
 end
+
+%% Usual least squares
+pib_hat = (Wb_uldd'*Wb_uldd)\(Wb_uldd'*Tau_uldd);
+
+pi_b = pib_hat(1:40); % variables for base paramters
+pi_frctn = pib_hat(41:end);
+
+
 
 
 %% Set-up SDP optimization procedure
@@ -61,6 +69,8 @@ for i = 1:6
                 pii(mass_indexes(i)) < massUpperBound(i)];
         
 end
+
+
 
 if physicalConsistency
     for i = 1:11:66

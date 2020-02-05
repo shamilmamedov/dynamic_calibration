@@ -5,19 +5,14 @@
 % vldtnTrjctry = parseURData('ur-19_10_01-14_04_13.csv', 1, 759);
 % vldtnTrjctry = parseURData('ur-19_10_01-13_51_41.csv', 1, 660);
 % vldtnTrjctry = parseURData('ur-19_09_27-11_28_22.csv', 1, 594);
-% vldtnTrjctry = parseURData('ur-20_01_17-p1.csv', 1, 250);
-vldtnTrjctry = parseURData('ur-20_01_17-ptp_10_points.csv', 1, 5346);
-
+vldtnTrjctry = parseURData('ur-20_01_17-p2.csv', 1, 250);
+% vldtnTrjctry = parseURData('ur-20_01_17-ptp_10_points.csv', 1, 5346);
 vldtnTrjctry = filterData(vldtnTrjctry);
 
 
 % -----------------------------------------------------------------------
 % Predicting torques
 % -----------------------------------------------------------------------
-pi_rigidBody = reshape(identifiedUR10E.standardParameters,[11,6]);
-pi_rigidBody = pi_rigidBody(1:10,:);
-pi_rigidBody = reshape(pi_rigidBody,[60 1]);
-
 %Constracting regressor matrix
 tau_msrd = []; tau_prdctd1 = []; tau_prdctd2 = [];
 i_prdct1 = []; i_prdct2 = [];
@@ -26,7 +21,7 @@ for i = 1:length(vldtnTrjctry.t)
                                     vldtnTrjctry.qd_fltrd(i,:)',...
                                     vldtnTrjctry.q2d_est(i,:)');
     
-    tau_withoutFriction = Yi*E1*identifiedUR10E.baseParameters;
+    tau_withoutFriction = Yi*E1*pi_b;
     
     tau_lnr_frcn = zeros(6,1);
 %     tau_nonlnr_frcn = zeros(6,1);
@@ -36,7 +31,7 @@ for i = 1:length(vldtnTrjctry.t)
 %         tau_nonlnr_frcn(j) = nonlinearFrictionModel(pi_nonlnr_frcn(5*(j-1)+1:5*(j-1)+5),...
 %                                                     vldtnTrjctry.qd_fltrd(i,j)');
     end
-    tau_msrd = horzcat(tau_msrd, diag(drvGains)*vldtnTrjctry.i_fltrd(i,:)');
+    tau_msrd = horzcat(tau_msrd, diag(drvGains)*vldtnTrjctry.i(i,:)');
     tau_prdctd1 = horzcat(tau_prdctd1, tau_withoutFriction + tau_lnr_frcn);
 %     tau_prdctd2 = horzcat(tau_prdctd2, tau_withoutFriction + tau_nonlnr_frcn);
     
@@ -45,16 +40,44 @@ for i = 1:length(vldtnTrjctry.t)
 end
 
 %%
+plotTorquesWithLinearFriction = 0;
+plotTorquesWithNonlinearFriction = 0;
 
 for i = 1:6
     figure
     hold on
-    plot(vldtnTrjctry.t, tau_msrd(i,:), 'r-')
-%     plot(vldtnTrjctry.t, vldtnTrjctry.tau_des(:,i))
-    plot(vldtnTrjctry.t, tau_prdctd1(i,:),'k-')
-    legend('measured', 'desired', 'predicted')
+    plot(vldtnTrjctry.t, vldtnTrjctry.i(:,i), 'r-')
+    plot(vldtnTrjctry.t, i_prdct1(i,:), 'k-')
+    legend('measured', 'prdctd1')
     grid on
 end
+
+
+
+if plotTorquesWithLinearFriction
+    for i = 1:6
+        figure
+        hold on
+        plot(vldtnTrjctry.t, tau_msrd(i,:), 'r-')
+        plot(vldtnTrjctry.t, tau_prdctd1(i,:), 'k-')
+        plot(vldtnTrjctry.t, tau_prdctd1(i,:) - tau_msrd(i,:), '--')
+        legend('measured', 'predicted', 'error')
+        grid on
+    end
+end
+
+if plotTorquesWithNonlinearFriction
+    for i = 1:6
+        figure
+        hold on
+        plot(vldtnTrjctry.t, tau_msrd(i,:), 'r-')
+        plot(vldtnTrjctry.t, tau_prdctd2(i,:), 'k-')
+        plot(vldtnTrjctry.t, tau_prdctd2(i,:) - tau_msrd(i,:), '--')
+        legend('measured', 'predicted', 'error')
+        grid on
+    end
+end
+
 return
 for i = 1:6
     figure

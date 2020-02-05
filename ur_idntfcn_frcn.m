@@ -61,7 +61,7 @@ x1 = fminsearch(@(x)costFcn(x, link1.qd_fltrd(:,1), link1.deltaTau), x10, fminsr
 x2 = fminsearch(@(x)costFcn(x, link2.qd_fltrd(:,2), link2.deltaTau), x20, fminsrchOptns);
 x3 = fminsearch(@(x)costFcn(x, link3.qd_fltrd(:,3), link3.deltaTau), x30, fminsrchOptns);
 x4 = fminsearch(@(x)costFcn(x, link4.qd_fltrd(:,4), link4.deltaTau), x40, fminsrchOptns);
-x5 = fminsearch(@(x)costFcn(x, link5.qd_fltrd(:,5), link5.deltaTau), x50, fminsrchOptns);
+x5 = fminsearch(@(x)costFcn(x, link5.qd_fltrd(:,5), link5.deltaTau), x4, fminsrchOptns);
 x6 = fminsearch(@(x)costFcn(x, link6.qd_fltrd(:,6), link6.deltaTau), x5, fminsrchOptns);
 
 pi_nonlnr_frcn = [x1; x2; x3; x4; x5; x6];
@@ -77,7 +77,7 @@ plotFrictionModels(link4, 4, pi_frctn(10:12), x4)
 plotFrictionModels(link5, 5, pi_frctn(13:15), x5)
 plotFrictionModels(link6, 6, pi_frctn(16:18), x6)
 
-
+return
 %% Plot torque prediction with different friction models
 plotTroqueEstimation(link1, 1, drvGains(1), pi_frctn(1:3), x1)
 plotTroqueEstimation(link2, 2, drvGains(2), pi_frctn(4:6), x2)
@@ -85,8 +85,6 @@ plotTroqueEstimation(link3, 3, drvGains(3), pi_frctn(7:9), x3)
 plotTroqueEstimation(link4, 4, drvGains(4), pi_frctn(10:12), x4)
 plotTroqueEstimation(link5, 5, drvGains(5), pi_frctn(13:15), x5)
 plotTroqueEstimation(link6, 6, drvGains(6), pi_frctn(16:18), x6)
-
-
 
 
 %% Utilized Functions
@@ -104,18 +102,10 @@ end
 
 function plotFrictionModels(link, noLink, linear, nonlinear)
     figure
-    subplot(1,2,1)
     hold on
     scatter(link.qd(:,noLink), link.deltaTau, '.')
     plot(link.qd(:,noLink), nonlinearFrictionModel(nonlinear, link.qd(:,noLink)))
     plot(link.qd(:,noLink), linearFrictionModel(linear, link.qd(:,noLink)))
-    legend('real', 'nonlinear model', 'linear model','Location','northwest')
-    title(strcat('Link ',num2str(noLink),' friction model'))
-    subplot(1,2,2)
-    hold on
-    scatter(link.q(:,noLink), link.deltaTau, '.')
-    plot(link.q(:,noLink), nonlinearFrictionModel(nonlinear, link.qd(:,noLink)))
-    plot(link.q(:,noLink), linearFrictionModel(linear, link.qd(:,noLink)))
     legend('real', 'nonlinear model', 'linear model','Location','northwest')
     title(strcat('Link ',num2str(noLink),' friction model'))
 end

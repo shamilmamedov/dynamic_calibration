@@ -1,14 +1,9 @@
 clc; clear all; close all;
 
-%-------------------------------------------------------------------------
 % Loading file from urdf
-% ------------------------------------------------------------------------
-
 plnr = xml2struct('planar_manip.urdf');
 
-% ------------------------------------------------------------------------
 % Extracting parameters of the robot
-% ------------------------------------------------------------------------
 for i = 1:2
 % axis of rotation of a joint i in coordinate system of joint i    
    axis_of_rot = str2num(plnr.robot.joint{i}.axis.Attributes.xyz)';
@@ -40,6 +35,7 @@ for i = 1:2
    plnr.pi(:,i) = [plnr.I_vec(:,i);plnr.h(:,i);plnr.m(i)];
 end
 
+return
 % ------------------------------------------------------------------------
 % Defining parameters symbolically
 % ------------------------------------------------------------------------
@@ -180,6 +176,7 @@ for i = 1:2
     pi_base_vctr = vertcat(pi_base_vctr,pi_base_num{i});
 end
 
+return
 % ------------------------------------------------------------------------
 % Using lagrange equations of the second kind, find dynamics
 % ------------------------------------------------------------------------
