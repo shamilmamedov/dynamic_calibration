@@ -9,8 +9,8 @@ includeMotorDynamics = 1;
 
 
 % limits on positions, velocities, accelerations
-q_min = -deg2rad(160);
-q_max = 0;
+q_min = -2*pi;
+q_max = 2*pi;
 qd_min = -10;
 qd_max = 10;
 q2d_min = -100;
@@ -96,7 +96,6 @@ pi2 = E(:,bb+1:end)'*pi_pndbt_sym; % dependent paramteres
 pi_lgr_base = pi1 + beta*pi2;
 pi_lgr_base2 = [eye(bb) beta]*[pi1;pi2];
 pi_lgr_base3 = [eye(bb) beta]*E'*pi_pndbt_sym;
-
 
 % -----------------------------------------------------------------------
 % Validation of obtained mappings

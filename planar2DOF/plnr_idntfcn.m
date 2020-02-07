@@ -32,7 +32,7 @@ for i = 1:2
    plnr.h(:,i) = link_mass*com_pos;
    plnr.I_vec(:,i) = inertiaMatrix2Vector(link_inertia-...
                             link_mass*com_vec2mat*com_vec2mat);
-   plnr.pi(:,i) = [plnr.I_vec(:,i);plnr.h(:,i);plnr.m(i)];
+   plnr.pi(:,i) = [plnr.I_vec(:,i); plnr.h(:,i); plnr.m(i)];
 end
 
 return

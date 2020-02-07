@@ -71,11 +71,12 @@ for i = 1:noIter
     Ylgr = Y_fcn(q,qd,q2d);
 
     tau1 = inverseDynamics(rbt,q,qd,q2d);
-    tau2 = Ylgr*reshape(plnr.pi,[20,1]);
+    tau2 = Ylgr*plnr.pi(:);
 
 %   verifying if regressor is computed correctly  
     err1(i) = norm(tau1 - tau2);
 end
+plot(err1)
 
 if all(err1<1e-6)
     disp('Regressor matrix is computed correctly!')

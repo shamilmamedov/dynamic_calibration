@@ -12,12 +12,14 @@ function data = filterData(data)
 %          filtered currents, data.q2d_est - estimated accelerations
 % ---------------------------------------------------------------------
 
+% data = parseURData('ur-20_02_05-20sec_8harm.csv', 320, 2310);
+
 % ---------------------------------------------------------------------
 % Filtering Velocities
 % ---------------------------------------------------------------------
 % Design filter
-vel_filt = designfilt('lowpassiir','FilterOrder',3, ...
-        'HalfPowerFrequency',0.2,'DesignMethod','butter');
+vel_filt = designfilt('lowpassiir','FilterOrder',5, ...
+        'HalfPowerFrequency',0.15,'DesignMethod','butter');
 
 data.qd_fltrd = zeros(size(data.qd));
 for i = 1:6
@@ -38,7 +40,7 @@ end
 
 % Zeros phase filtering acceleration obtained by finite difference
 accel_filt = designfilt('lowpassiir','FilterOrder',5, ...
-        'HalfPowerFrequency',0.05,'DesignMethod','butter');
+        'HalfPowerFrequency',0.15,'DesignMethod','butter');
 for i = 1:6
     data.q2d_est(:,i) = filtfilt(accel_filt,data.q2d_est(:,i));
 end
@@ -48,7 +50,7 @@ end
 % ------------------------------------------------------------------------
 % Zeros phase filtering acceleration obtained by finite difference
 curr_filt = designfilt('lowpassiir','FilterOrder',5, ...
-        'HalfPowerFrequency',0.1,'DesignMethod','butter');
+        'HalfPowerFrequency',0.20,'DesignMethod','butter');
 
 for i = 1:6
     data.i_fltrd(:,i) = filtfilt(curr_filt,data.i(:,i));
@@ -63,4 +65,28 @@ end
 
 for i = 1:6
     data.tau_des_fltrd(:,i) = filtfilt(curr_filt,data.tau_des(:,i));
+end
+
+
+
+% Functions for plotting
+function plotVelocity(trj)
+    figure
+    plot(trj.t, trj.qd)
+    hold on
+    plot(trj.t, trj.qd_fltrd)
+end
+
+function plotCurrent(trj)
+    figure
+    plot(trj.t, trj.i)
+    hold on
+    plot(trj.t, trj.i_fltrd)
+end
+
+function plotAcceleration(trj)
+    figure
+    plot(trj.t, trj.q2d_est)
+end
+
 end

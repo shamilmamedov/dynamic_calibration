@@ -7,7 +7,7 @@ load('plnrBaseQR.mat')
 % compose observation matrix and torque vector
 noObservations = length(pendubot.time);
 W = []; Tau = [];
-for i = 1:noObservations
+for i = 1:1:noObservations
     qi = [pendubot.shldr_position(i), pendubot.elbw_position(i)]';
     qdi = [pendubot.shldr_velocity_filtered(i), pendubot.elbw_velocity_filtered(i)]';
     q2di = [pendubot.shldr_acceleration_filtered(i), pendubot.elbow_acceleration_filtered(i)]';
@@ -21,7 +21,8 @@ for i = 1:noObservations
     Yfrctni = frictionRegressor(qdi);
     W = vertcat(W, [Ybi, Yfrctni]);
     
-    taui = [pendubot.torque(i), 0]';
+    taui = [-pendubot.torque(i), 0]';
+%     taui = [pendubot.current(i)*0.123, 0]';
     Tau = vertcat(Tau, taui);
 end
 
@@ -31,7 +32,7 @@ pi_hat = (W'*W)\(W'*Tau)
 
 
 %% Set-up SDP optimization procedure
-physicalConsistency = 1;
+physicalConsistency = 0;
 
 pi_frctn = sdpvar(6,1);
 pi_b = sdpvar(plnrBaseQR.numberOfBaseParameters,1); % variables for base paramters
@@ -70,10 +71,10 @@ else
 end
 cnstr = [cnstr, pii(11) > 0]; % first motor inertia constraint
 
-% Feasibility constraints on the friction prameters 
-for i = 1:2
-   cnstr = [cnstr, pi_frctn(3*i-2)>0, pi_frctn(3*i-1)>0];  
-end
+% % Feasibility constraints on the friction prameters 
+% for i = 1:2
+%    cnstr = [cnstr, pi_frctn(3*i-2)>0, pi_frctn(3*i-1)>0];  
+% end
 
 % Defining pbjective function
 obj = norm(Tau - W*[pi_b; pi_frctn], 2);

@@ -3,8 +3,8 @@
 run('plnr_idntfcn.m')
 
 % load pendubot data
-% rawData = load('current_A_5_v_4.mat');
-rawData = load('current_A_0.7_v_1.mat');
+% rawData = load('position_A_0.7_v_0.5.mat');
+rawData = load('position_A_1.2_v_0.05.mat');
 
 % parse pendubot data
 pendubot.time = rawData.data(:,1) - rawData.data(1,1);
@@ -16,9 +16,6 @@ pendubot.shldr_position = rawData.data(:,7) - pi/2; % to fit model
 pendubot.shldr_velocity = rawData.data(:,9);
 pendubot.elbw_position = rawData.data(:,8);
 pendubot.elbw_velocity = rawData.data(:,10);
-
-pendubot.position_desired = rawData.data(:,5);
-pendubot.velocity_desired = rawData.data(:,6);
 
 % filter velocties with zero phas filter
 vlcty_fltr = designfilt('lowpassiir','FilterOrder',5, ...
@@ -50,6 +47,12 @@ trq_fltr = designfilt('lowpassiir','FilterOrder',5, ...
 pendubot.torque_filtered = filtfilt(trq_fltr, pendubot.torque);
 
 %% 
+
+% figure
+% plot(pendubot.time, pendubot.current*0.123)
+% hold on
+% plot(pendubot.time, pendubot.torque)
+
 return
 plotJointPositions(pendubot)
 plotJointVelocities(pendubot)
@@ -64,10 +67,13 @@ function plotJointPositions(pendubot)
 figure
 subplot(2,1,1)
     plot(pendubot.time, pendubot.shldr_position)
+    hold on
+    plot(pendubot.time, pendubot.current_desired)
     xlim([0 1])
     xlabel('$t$, sec','interpreter', 'latex')
     ylabel('$q_1$, rad','interpreter', 'latex')
     grid on
+    legend('measured', 'desired')
 subplot(2,1,2)
     plot(pendubot.time, pendubot.elbw_position)
     xlim([0 1])

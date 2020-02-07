@@ -1,6 +1,7 @@
 clc; clear all;
 
-name = 'current_A_0.7_v_1.bag';
+% name = 'position_A_0.7_v_0.5.bag';
+name = 'position_A_1.2_v_0.05.bag';
 bag = rosbag(name);
 end_time = 20;
 
