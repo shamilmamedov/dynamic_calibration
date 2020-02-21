@@ -1,7 +1,11 @@
 clc; clear all;
 
 % name = 'position_A_0.7_v_0.5.bag';
-name = 'position_A_1.2_v_0.05.bag';
+% name = 'position_A_1.2_v_0.05.bag';
+% name = 'position_A_1.1_v_0.01.bag';
+% name = 'position_A_0.5_v_1.bag';
+% name = 'ramp_A_1.2_v_1.bag';
+
 bag = rosbag(name);
 end_time = 20;
 
@@ -63,6 +67,6 @@ T = table(time, current, torque, command, position, velocity, shldr_position, el
 data = T.Variables;
 
 
-save(strcat('planar2DOF/data_pndbt/',name(1:end-4),'.mat'),'data');
+save(strcat('planar2DOF/data_pndbt/mat_files/',name(1:end-4),'.mat'),'data');
 
 

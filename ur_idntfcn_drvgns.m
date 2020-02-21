@@ -3,13 +3,16 @@ clc; clear all; close all;
 % ------------------------------------------------------------------------
 % Load data and procces it (filter and estimate accelerations)
 % ------------------------------------------------------------------------
-% unloadedTrajectory = parseURData('ur-19_12_23_free.csv', 1, 2036);
-unloadedTrajectory = parseURData('ur-20_01_31-unload.csv', 300, 2623);
+unloadedTrajectory = parseURData('ur-20_02_12-50sec_12harm.csv', 355, 5090);
+% unloadedTrajectory = parseURData('ur-20_01_31-unload.csv', 300, 2623);
+% unloadedTrajectory = parseURData('ur-20_02_19_14harm50sec.csv', 195, 4966);
 unloadedTrajectory = filterData(unloadedTrajectory);
 
 % loadedTrajectory = parseURData('ur-20_01_13-load_2600.csv', 250, 2274);
-loadedTrajectory = parseURData('ur-20_01_31-load.csv', 370, 2881);
+% loadedTrajectory = parseURData('ur-20_01_31-load.csv', 370, 2881);
+loadedTrajectory = parseURData('ur-20_02_19_14harm50secLoad.csv', 308, 5071);
 loadedTrajectory = filterData(loadedTrajectory);
+
 
 % ------------------------------------------------------------------------
 % Generate Regressors based on data
@@ -95,7 +98,7 @@ Yb_ts = [zeros(size(I_uldd,1),1); Wl_known*m_load];
 
 % Compute least squares solution
 pi_ls = ((Wb_ls'*Wb_ls)\Wb_ls')*Yb_ts;
-drvGainsLS1 = pi_ls(1:6)
+drvGainsOLS1 = pi_ls(1:6)
 
 
 G = zeros(6);
@@ -105,13 +108,14 @@ for i = 1:6
     sgmai_sqrd = norm(Yib_ls - Wib_ls*pi_ls,2)^2/(size(Wib_ls,1)-rank(Wib_ls));
     G(i,i) = 1/sqrt(sgmai_sqrd);
 end
+G = diag([0.05 1 1 1 1 1]);
 
 for i = 1:6:size(Wb_ls,1)
     Wb_ls(i:i+5,:) = G*Wb_ls(i:i+5,:);
     Yb_ts(i:i+5) = G*Yb_ts(i:i+5);
 end
 pi_tot = ((Wb_ls'*Wb_ls)\Wb_ls')*Yb_ts;
-drvGainsLS2 = pi_tot(1:6)
+drvGainsOLS2 = pi_tot(1:6)
 
 
 %% Set-up SDP optimization procedure
@@ -128,7 +132,7 @@ pii = baseQR.permutationMatrix*[ eye(baseQR.numberOfBaseParameters), ...
                                 eye(26) ]*[pi_b; pi_d];
 
 % Feasibility contrraints of the link paramteres and rotor inertia
-cnstr = diag(drv_gns)>0;
+cnstr = [drv_gns(1)>10];
 for i = 1:11:66
     link_inertia_i = [pii(i), pii(i+1), pii(i+2); ...
                       pii(i+1), pii(i+3), pii(i+4); ...

@@ -6,26 +6,60 @@ clc; clear all; close all;
 
 % idntfcnTrjctry = parseURData('ur-19_12_23_free.csv', 1, 2005);
 % idntfcnTrjctry = parseURData('ur-20_01_31-unload.csv', 300, 2623);
-% idntfcnTrjctry = parseURData('ur-20_02_06-20sec_5harm.csv', 545, 2417); % 713
-idntfcnTrjctry = parseURData('ur-20_02_05-20sec_8harm.csv', 320, 2310);
-% idntfcnTrjctry = parseURData('ur-20_02_06-20sec_10harm.csv', 713, 2800); % 713
+% idntfcnTrjctry = parseURData('ur-20_02_06-20sec_5harm.csv', 545, 2417); 
+% idntfcnTrjctry = parseURData('ur-20_02_10-20sec_7harm.csv', 544, 2500); 
+% idntfcnTrjctry = parseURData('ur-20_02_05-20sec_8harm.csv', 320, 2310);
+% idntfcnTrjctry = parseURData('ur-20_02_06-20sec_10harm.csv', 713, 2800); 
 % idntfcnTrjctry = parseURData('ur-20_02_05-20sec_12harm.csv', 605, 2710);
+% idntfcnTrjctry = parseURData('ur-20_02_10-30sec_12harm.csv', 635, 3510); 
+% idntfcnTrjctry = parseURData('ur-20_02_12-40sec_12harm.csv', 500, 4460); 
+% idntfcnTrjctry = parseURData('ur-20_02_12-50sec_12harm.csv', 355, 5090);
 
-idntfcnTrjctry = filterData(idntfcnTrjctry);
+% idntfcnTrjctry = filterData(idntfcnTrjctry);
+
+
+% idntfcnTrjctry{1} = parseURData('ur-19_12_23_free.csv', 1, 2005);
+% idntfcnTrjctry{2} = parseURData('ur-20_01_31-unload.csv', 300, 2623);
+% idntfcnTrjctry{3} = parseURData('ur-20_02_06-20sec_5harm.csv', 545, 2417);
+% idntfcnTrjctry{4} = parseURData('ur-20_02_10-20sec_7harm.csv', 544, 2500); 
+% idntfcnTrjctry{5} = parseURData('ur-20_02_05-20sec_8harm.csv', 320, 2310);
+% idntfcnTrjctry{6} = parseURData('ur-20_02_06-20sec_10harm.csv', 713, 2800);
+% idntfcnTrjctry{7} = parseURData('ur-20_02_05-20sec_12harm.csv', 605, 2710);
+% idntfcnTrjctry{8} = parseURData('ur-20_02_10-30sec_12harm.csv', 635, 3510);
+% idntfcnTrjctry{9} = parseURData('ur-20_02_12-40sec_12harm.csv', 500, 4460);
+% idntfcnTrjctry{10} = parseURData('ur-20_02_12-50sec_12harm.csv', 355, 5090);
+
+idntfcnTrjctry{1} = parseURData('ur-20_02_10-30sec_12harm.csv', 635, 3510);
+
+for i = 1:length(idntfcnTrjctry)
+    idntfcnTrjctry{i} = filterData(idntfcnTrjctry{i});
+end
+
 
 %{
-idntfcnTrjctry1 = parseURData('ur-20_02_05-20sec_8harm.csv', 320, 2310);
-idntfcnTrjctry2 = parseURData('ur-20_02_06-20sec_10harm.csv', 713, 2800);
+idntfcnTrjctry{1} = parseURData('ur-20_02_10-30sec_12harm.csv', 635, 3510);
+idntfcnTrjctry{2} = parseURData('ur-20_02_12-40sec_12harm.csv', 500, 4460);
+idntfcnTrjctry{3} = parseURData('ur-20_02_12-50sec_12harm.csv', 355, 5090);
 
+idntfcnTrjctry{1} = filterData(idntfcnTrjctry{1});
+idntfcnTrjctry{2} = filterData(idntfcnTrjctry{2});
+idntfcnTrjctry{3} = filterData(idntfcnTrjctry{3});
 
-idntfcnTrjctry1 = filterData(idntfcnTrjctry1);
-idntfcnTrjctry2 = filterData(idntfcnTrjctry2);
-
-idntfcnTrjctry3.t = [idntfcnTrjctry1.t; idntfcnTrjctry2.t + idntfcnTrjctry1.t(end)];
-idntfcnTrjctry3.q = [idntfcnTrjctry1.q; idntfcnTrjctry2.q];
-idntfcnTrjctry3.qd_fltrd = [idntfcnTrjctry1.qd_fltrd; idntfcnTrjctry2.qd_fltrd];
-idntfcnTrjctry3.q2d_est = [idntfcnTrjctry1.q2d_est; idntfcnTrjctry2.q2d_est];
-idntfcnTrjctry3.i_fltrd = [idntfcnTrjctry1.i_fltrd; idntfcnTrjctry2.i_fltrd];
+idntfcnTrjctry{4}.t = [idntfcnTrjctry{1}.t;... 
+                       idntfcnTrjctry{1}.t(end) + idntfcnTrjctry{2}.t;... 
+                       idntfcnTrjctry{1}.t(end) + idntfcnTrjctry{2}.t(end) + idntfcnTrjctry{3}.t];
+idntfcnTrjctry{4}.q = [idntfcnTrjctry{1}.q; 
+                       idntfcnTrjctry{2}.q; 
+                       idntfcnTrjctry{3}.q];
+idntfcnTrjctry{4}.qd_fltrd = [idntfcnTrjctry{1}.qd_fltrd; 
+                              idntfcnTrjctry{2}.qd_fltrd; 
+                              idntfcnTrjctry{3}.qd_fltrd];
+idntfcnTrjctry{4}.q2d_est = [idntfcnTrjctry{1}.q2d_est; 
+                             idntfcnTrjctry{2}.q2d_est; 
+                             idntfcnTrjctry{3}.q2d_est];
+idntfcnTrjctry{4}.i_fltrd = [idntfcnTrjctry{1}.i_fltrd; 
+                             idntfcnTrjctry{2}.i_fltrd; 
+                             idntfcnTrjctry{3}.i_fltrd];
 %}
 
 % -------------------------------------------------------------------
@@ -37,27 +71,31 @@ load('baseQR.mat'); % load mapping from full parameters to base parameters
 
 
 % load identified drive gains
-% load('driveGains.mat')
-drvGains = [14.87; 13.26; 11.13; 10.62; 11.03; 11.47]; % deLuca gains
-
+load('driveGains.mat')
+drvGains2 = [14.87; 13.26; 11.13; 10.62; 11.03; 11.47]; % deLuca gains
 
 Tau = {}; Wb = {};
 
-[Tau{1}, Wb{1}] = buildObservationMatrices(idntfcnTrjctry, baseQR, drvGains);
-[Tau{2}, Wb{2}] = buildObservationMatrices(idntfcnTrjctry, baseQR, drvGains2);
-[Tau{3}, Wb{3}] = buildObservationMatrices(idntfcnTrjctry, baseQR, drvGains3);
+for i = 1:length(idntfcnTrjctry)
+    [Tau{i}, Wb{i}] = buildObservationMatrices(idntfcnTrjctry{i}, baseQR, drvGains);
+    [Tau{i+1}, Wb{i+1}] = buildObservationMatrices(idntfcnTrjctry{i}, baseQR, drvGains2);
+end
 
 % Usual least squares
-[pib_OLS(:,1), pifrctn_OLS(:,1)] = ordinaryLeastSquareEstimation(Tau{1}, Wb{1});
-[pib_OLS(:,2), pifrctn_OLS(:,2)] = ordinaryLeastSquareEstimation(Tau{2}, Wb{2});
-[pib_OLS(:,3), pifrctn_OLS(:,3)] = ordinaryLeastSquareEstimation(Tau{3}, Wb{3});
+for i = 1:length(idntfcnTrjctry)
+    [pib_OLS(:,i), pifrctn_OLS(:,i)] = ordinaryLeastSquareEstimation(Tau{i}, Wb{i});
+    [pib_OLS(:,i+1), pifrctn_OLS(:,i+1)] = ordinaryLeastSquareEstimation(Tau{i+1}, Wb{i+1});
+end
 
 % Set-up SDP optimization procedure
-[pib_SDP(:,1), pifrctn_SDP(:,1)] = physicallyConsistentEstimation(Tau{1}, Wb{1}, baseQR);
-[pib_SDP(:,2), pifrctn_SDP(:,2)] = physicallyConsistentEstimation(Tau{2}, Wb{2}, baseQR);
-[pib_SDP(:,3), pifrctn_SDP(:,3)] = physicallyConsistentEstimation(Tau{3}, Wb{3}, baseQR);
+for i = 1:length(idntfcnTrjctry)
+    [pib_SDP(:,i), pifrctn_SDP(:,i)] = physicallyConsistentEstimation(Tau{i}, Wb{i}, baseQR);
+    [pib_SDP(:,i+1), pifrctn_SDP(:,i+1)] = physicallyConsistentEstimation(Tau{i+1}, Wb{i+1}, baseQR);
+end
+
 
 return
+% 
 
 %% Saving identified parameters
 pi_full = baseQR.permutationMatrix*[eye(baseQR.numberOfBaseParameters), ...

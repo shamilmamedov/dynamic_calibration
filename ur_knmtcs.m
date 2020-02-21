@@ -30,13 +30,23 @@ matlabFunction(pos,'File','autogen/position_fk_UR10E','Vars',{q_sym})
 %}
 
 % load('ptrnSrch_N6T20QR.mat');
+% load('ptrnSrch_N7T20QR.mat');
 % load('ptrnSrch_N8T20QR.mat');
 % load('ptrnSrch_N10T20QR.mat');
 % load('ptrnSrch_N12T20QR.mat');
-load('ga_N5T20.mat');
+% load('ptrnSrch_N12T30QR.mat');
+load('ptrnSrch_N12T50QR.mat');
+% load('ptrnSrch_N15T50QR.mat');
+% load('ga_N5T20.mat');
 traj_par.t_smp = 5e-2;
 traj_par.t = 0:traj_par.t_smp:traj_par.T;
 [q,qd,q2d] = mixed_traj(traj_par.t, c_pol, a, b, traj_par.wf, traj_par.N);
+
+% Compute condition number of the observation matrix
+load('baseQR.mat');
+ab = reshape([a;b], [12*traj_par.N,1]);
+conditionNumer = traj_cost_lgr(ab,traj_par,baseQR)
+
 
 
 %%
@@ -60,6 +70,7 @@ ylabel('Y')
 zlabel('Z')
 axis equal
 view(3)
+
 
 %% write into file
 writeTrajectoryCoefficientsIntoFile(a, b, c_pol)
