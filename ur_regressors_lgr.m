@@ -7,6 +7,7 @@ run('main_ur.m')
 
 generateLoadRegressorFunction = 0;
 generateFullRegressorFunction = 0;
+generateSystemMatricesFunctions = 1;
 
 % Symbolic generilized coordiates, their first and second deriatives
 q_sym = sym('q%d',[6,1],'real');
@@ -21,8 +22,6 @@ w_kk(:,1) = sym(zeros(3,1)); % angular velocity k in frame k
 v_kk(:,1) = sym(zeros(3,1)); % linear velocity of the origin of frame k in frame k
 g_kk(:,1) = sym([0,0,9.81])'; % vector of graviatational accelerations in frame k
 p_kk(:,1) = sym(zeros(3,1)); % origin of frame k in frame k
-DK(:,1) = sym(zeros(10,1)); % gradient of kinetic energy
-DP(:,1) = sym([zeros(1,6),[0,0,9.81],0]'); % gradient of gravitational energy
 
 for i = 1:6
     jnt_axs_k = str2num(ur10.robot.joint{i}.axis.Attributes.xyz)';
@@ -78,36 +77,36 @@ beta_Pl = [sym(zeros(1,6)), g_eeee', g_eeee'*p_eeee];
 % ---------------------------------------------------------------------
 % Dynamic regressor of the load
 % ---------------------------------------------------------------------
-Lagrl = beta_Kl - beta_Pl;
-dLagrl_dq = jacobian(Lagrl,q_sym)';
-dLagrl_dqd = jacobian(Lagrl,qd_sym)';
+beta_Ll = beta_Kl - beta_Pl;
+dbetaLl_dq = jacobian(beta_Ll,q_sym)';
+dbetaLl_dqd = jacobian(beta_Ll,qd_sym)';
 tl = sym(zeros(6,10));
 for i = 1:6
-   tl = tl + diff(dLagrl_dqd,q_sym(i))*qd_sym(i)+...
-                diff(dLagrl_dqd,qd_sym(i))*q2d_sym(i);
+   tl = tl + diff(dbetaLl_dqd,q_sym(i))*qd_sym(i)+...
+                diff(dbetaLl_dqd,qd_sym(i))*q2d_sym(i);
 end
-Y_l = tl - dLagrl_dq;
+Y_l = tl - dbetaLl_dq;
 
 if generateLoadRegressorFunction
     matlabFunction(Y_l,'File','autogen/load_regressor_UR10E',...
-                   'Vars',{q_sym,qd_sym,q2d_sym});
+                   'Vars',{q_sym, qd_sym, q2d_sym});
 end
 
 
 % ---------------------------------------------------------------------
 % Dynamic regressor of the full paramters
 % ---------------------------------------------------------------------
-Lagrf = [beta_K(1,:) - beta_P(1,:), beta_K(2,:) - beta_P(2,:),...
+beta_Lf = [beta_K(1,:) - beta_P(1,:), beta_K(2,:) - beta_P(2,:),...
          beta_K(3,:) - beta_P(3,:), beta_K(4,:) - beta_P(4,:),...
          beta_K(5,:) - beta_P(5,:), beta_K(6,:) - beta_P(6,:)];
-dLagrf_dq = jacobian(Lagrf,q_sym)';
-dLagrf_dqd = jacobian(Lagrf,qd_sym)';
+dbetaLf_dq = jacobian(beta_Lf,q_sym)';
+dbetaLf_dqd = jacobian(beta_Lf,qd_sym)';
 tf = sym(zeros(6,60));
 for i = 1:6
-   tf = tf + diff(dLagrf_dqd,q_sym(i))*qd_sym(i)+...
-                diff(dLagrf_dqd,qd_sym(i))*q2d_sym(i);
+   tf = tf + diff(dbetaLf_dqd,q_sym(i))*qd_sym(i)+...
+                diff(dbetaLf_dqd,qd_sym(i))*q2d_sym(i);
 end
-Y_f = tf - dLagrf_dq;
+Y_f = tf - dbetaLf_dq;
 
 if generateFullRegressorFunction
     matlabFunction(Y_f,'File','autogen/full_regressor_UR10E',...
@@ -117,10 +116,46 @@ end
 % -------------------------------------------------------------------
 % Dynamics matrices of the robot
 % -------------------------------------------------------------------
-pi_sndrd_sym = sym('pi%d%d',[60,1],'real');
-t1 = [beta_P(1,:), beta_P(2,:), beta_P(3,:), beta_P(4,:),...
-      beta_P(5,:), beta_P(6,:)];
-G_vctr_sym = jacobian(t1, q_sym)'*pi_sndrd_sym;
+if generateSystemMatricesFunctions
 
-matlabFunction(G_vctr_sym, 'File','autogen/G_vctr_fcn2',...
-                   'Vars',{q_sym, pi_sndrd_sym}, 'Optimize',false);
+pi_sndrd_sym = sym('pi%d%d', [60,1], 'real'); % standard parameters
+Lagr = beta_Lf*pi_sndrd_sym; % Lagrangian of the system
+P = [beta_P(1,:), beta_P(2,:), beta_P(3,:), beta_P(4,:),...
+     beta_P(5,:), beta_P(6,:)]*pi_sndrd_sym; % Potential energy
+ 
+dLagr_dqd = jacobian(Lagr, qd_sym)';
+
+M_mtrx_sym = jacobian(dLagr_dqd, qd_sym);  
+G_vctr_sym = jacobian(P, q_sym)';
+
+cs1 = sym(zeros(6,6,6)); % Christoffel symbols of the first kind
+for i = 1:1:6
+    for j = 1:1:6
+       for k = 1:1:6
+          cs1(i,j,k) = 0.5*(diff(M_mtrx_sym(i,j), q_sym(k)) + ...
+                          diff(M_mtrx_sym(i,k), q_sym(j)) - ...
+                          diff(M_mtrx_sym(j,k), q_sym(i)));
+       end
+    end
+end
+
+C_mtrx_sym = sym(zeros(6, 6));
+for i = 1:1:6
+    for j = 1:1:6
+        for k = 1:1:6
+            C_mtrx_sym(i,j) = C_mtrx_sym(i,j)+cs1(i,j,k)*qd_sym(k);
+        end
+    end
+end
+
+matlabFunction(M_mtrx_sym, 'File','autogen/M_mtrx_fcn',...
+               'Vars',{q_sym, pi_sndrd_sym}, 'Optimize', false);
+               
+matlabFunction(C_mtrx_sym, 'File','autogen/C_mtrx_fcn',...
+               'Vars',{q_sym, qd_sym, pi_sndrd_sym}, 'Optimize', false);
+
+matlabFunction(G_vctr_sym, 'File','autogen/G_vctr_fcn',...
+               'Vars',{q_sym, pi_sndrd_sym}, 'Optimize', false);
+
+end
+

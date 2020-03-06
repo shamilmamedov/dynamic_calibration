@@ -3,8 +3,8 @@ clc; clear all; close all;
 % ------------------------------------------------------------------------
 % Load data and procces it (filter and estimate accelerations)
 % ------------------------------------------------------------------------
-unloadedTrajectory = parseURData('ur-20_02_12-50sec_12harm.csv', 355, 5090);
-% unloadedTrajectory = parseURData('ur-20_01_31-unload.csv', 300, 2623);
+% unloadedTrajectory = parseURData('ur-20_02_12-50sec_12harm.csv', 355, 5090);
+unloadedTrajectory = parseURData('ur-20_01_31-unload.csv', 300, 2623);
 % unloadedTrajectory = parseURData('ur-20_02_19_14harm50sec.csv', 195, 4966);
 unloadedTrajectory = filterData(unloadedTrajectory);
 
@@ -12,7 +12,6 @@ unloadedTrajectory = filterData(unloadedTrajectory);
 % loadedTrajectory = parseURData('ur-20_01_31-load.csv', 370, 2881);
 loadedTrajectory = parseURData('ur-20_02_19_14harm50secLoad.csv', 308, 5071);
 loadedTrajectory = filterData(loadedTrajectory);
-
 
 % ------------------------------------------------------------------------
 % Generate Regressors based on data

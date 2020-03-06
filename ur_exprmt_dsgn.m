@@ -6,9 +6,8 @@ run('main_ur.m'); % get robot description
 
 load('baseQR.mat'); % load mapping from full parameters to base parameters
 
-% Choose optimization algorithm: 'patternsearch', 'ga', 'fmincon'
+% Choose optimization algorithm: 'patternsearch', 'ga'
 optmznAlgorithm = 'patternsearch';
-searchOnlyForFeasibleSolution = 1;
 
 % Getting limits on posistion and velocities. Moreover we get some
 % constant parmeters of the robot that allow us to accelerate computation
@@ -51,8 +50,7 @@ Aeq = []; beq = [];
 lb = []; ub = [];
 
 if strcmp(optmznAlgorithm, 'patternsearch')
-    load('ptrnSrch_N7T25QR.mat')
-%     x0 = rand(6*2*traj_par.N,1);
+    x0 = rand(6*2*traj_par.N,1);
     x0 = reshape([a b], [6*2*traj_par.N, 1]); 
     optns_pttrnSrch = optimoptions('patternsearch');
     optns_pttrnSrch.Display = 'iter';
@@ -62,15 +60,9 @@ if strcmp(optmznAlgorithm, 'patternsearch')
     optns_pttrnSrch.MaxTime = inf;
     optns_pttrnSrch.MaxFunctionEvaluations = 1e+6;
     
-    if searchOnlyForFeasibleSolution
-    [x,fval] = patternsearch(@(x)0, x0, A, [], Aeq, beq, lb, ub, ...
-                             @(x)traj_cnstr_fsblty(x, traj_par, baseQR), ...
-                             optns_pttrnSrch);    
-    else
     [x,fval] = patternsearch(@(x)traj_cost_lgr(x,traj_par,baseQR), x0, ...
                              A, b, Aeq, beq, lb, ub, ...
                              @(x)traj_cnstr(x,traj_par), optns_pttrnSrch);
-    end          
 elseif strcmp(optmznAlgorithm, 'ga')
     optns_ga = optimoptions('ga');
     optns_ga.Display = 'iter';
@@ -83,27 +75,12 @@ elseif strcmp(optmznAlgorithm, 'ga')
     [x,fval] = ga(@(x)traj_cost_lgr(x,traj_par,baseQR), 6*2*traj_par.N,...
                   A, b, Aeq, beq, lb, ub, ...
                   @(x)traj_cnstr(x,traj_par), optns_ga);
-elseif strcmp(optmznAlgorithm, 'fmincon')
-    x0 = -1 + 2*rand(6*2*traj_par.N,1);
-    optns_fmincon = optimoptions('fmincon');
-    optns_fmincon.Algorithm = 'interior-point';
-    optns_fmincon.Display = 'iter';
-    optns_fmincon.MaxFunctionEvaluations = 1e+5;
-    optns_fmincon.OptimalityTolerance = 1e-3;
-    optns_fmincon.StepTolerance = 1e-10;
-    optns_fmincon.ConstraintTolerance = 1e-3;
-    
-    null_cost = @(x) 0;
-       
-    [x,fval] = fmincon(@(x)traj_cost_lgr(x,traj_par,baseQR), x0, ...
-                       A, b, Aeq, beq, lb, ub, ...
-                       @(x)traj_cnstr(x,traj_par), optns_fmincon);
 else
     error('Chosen algorithm is not found among implemented ones');
 end
 
-%% ------------------------------------------------------------------------
-% Verifying obtained trajectory
+% ------------------------------------------------------------------------
+% Plotting obtained trajectory
 % ------------------------------------------------------------------------
 ab = reshape(x,[12,traj_par.N]);
 a = ab(1:6,:); % sin coeffs
@@ -128,9 +105,11 @@ subplot(3,1,3)
     grid on
     legend('q2d1','q2d2','q2d3','q2d4','q2d5','q2d6')
 
-%%
+% ----------------------------------------------------------------------
+% Saving parameters of the optimized trajectory
+% ----------------------------------------------------------------------
 % %{
-pathToFolder = 'trajectory_optmzn/';
+pathToFolder = 'trajectory_optmzn/optimal_trjctrs/';
 t1 = strcat('N',num2str(traj_par.N),'T',num2str(traj_par.T));
 if strcmp(optmznAlgorithm, 'patternsearch')
     filename = strcat(pathToFolder,'ptrnSrch_',t1,'QR.mat');

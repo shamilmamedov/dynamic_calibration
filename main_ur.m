@@ -70,7 +70,7 @@ end
 % regressor - Y*pi = tau, and matlab Robotic Systems Toolbox inverse
 % dynamics command.
 % ------------------------------------------------------------------------
-TEST_DYNAMICS = 0;
+TEST_DYNAMICS = 1;
 
 if TEST_DYNAMICS
     rbt = importrobot('ur10e.urdf');
@@ -83,7 +83,7 @@ if TEST_DYNAMICS
     err1 = zeros(noIter,1); err2 = zeros(noIter,1); 
     err3 = zeros(noIter,1); err4 = zeros(noIter,1);
     for i = 1:noIter
-        q = rand(6,1);
+        q = -2*pi + 4*pi*rand(6,1);
         q_d = zeros(6,1);
         q_2d = zeros(6,1);
 
@@ -95,8 +95,10 @@ if TEST_DYNAMICS
         tau2 = Yscrw*reshape(ur10.pi_scrw,[60,1]);
         tau3 = inverseDynamics(rbt,q,q_d,q_2d);
         tau4 = Ylgr*reshape(ur10.pi,[60,1]);
-        tau5 = G_vctr_fcn2(q, reshape(ur10.pi,[60,1]));
-        
+        tau5 = M_mtrx_fcn(q, ur10.pi(:))*q_2d + ...
+               C_mtrx_fcn(q, q_d, ur10.pi(:))*q_d + ...
+               G_vctr_fcn(q, ur10.pi(:));
+                
     %   verifying if regressor is computed correctly  
         err1(i) = norm(tau3 - tau1);
     %   verifying if our inverse dynamics coincides with matlabs

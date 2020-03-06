@@ -89,14 +89,13 @@ end
 
 % Set-up SDP optimization procedure
 for i = 1:length(idntfcnTrjctry)
-    [pib_SDP(:,i), pifrctn_SDP(:,i)] = physicallyConsistentEstimation(Tau{i}, Wb{i}, baseQR);
-    [pib_SDP(:,i+1), pifrctn_SDP(:,i+1)] = physicallyConsistentEstimation(Tau{i+1}, Wb{i+1}, baseQR);
+    [pib_SDP(:,i), pifrctn_SDP(:,i), pi_full] = physicallyConsistentEstimation(Tau{i}, Wb{i}, baseQR);
+    [pib_SDP(:,i+1), pifrctn_SDP(:,i+1), ~] = physicallyConsistentEstimation(Tau{i+1}, Wb{i+1}, baseQR);
 end
 
 
-return
-% 
 
+return
 %% Saving identified parameters
 pi_full = baseQR.permutationMatrix*[eye(baseQR.numberOfBaseParameters), ...
                                     -baseQR.beta; ...
@@ -110,6 +109,7 @@ identifiedUR10E.standardParameters = pi_full;
 identifiedUR10E.linearFrictionParameters = pi_frctn;
 
 
+% 
 
 %% Statisitical analysis
 % unbiased estimation of the standard deviation
@@ -158,7 +158,7 @@ end
 
 
 
-function [pib_SDP, pifrctn_SDP] = physicallyConsistentEstimation(Tau, Wb, baseQR)
+function [pib_SDP, pifrctn_SDP, pi_full] = physicallyConsistentEstimation(Tau, Wb, baseQR)
 
 physicalConsistency = 1;
 
@@ -224,5 +224,10 @@ sol2 = optimize(cnstr, obj, sdpsettings('solver','sdpt3'));
 
 pib_SDP = value(pi_b); % variables for base paramters
 pifrctn_SDP = value(pi_frctn);
+
+pi_full = baseQR.permutationMatrix*[eye(baseQR.numberOfBaseParameters), ...
+                                    -baseQR.beta; ...
+                                    zeros(26,baseQR.numberOfBaseParameters), ... 
+                                    eye(26) ]*[value(pi_b); value(pi_d)];
 
 end
