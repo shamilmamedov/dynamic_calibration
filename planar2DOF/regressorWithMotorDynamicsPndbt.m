@@ -8,6 +8,7 @@ function Y = regressorWithMotorDynamicsPndbt(q,qd,q2d)
 % ----------------------------------------------------------------------
 if size(q,1)==2 && size(q,2)==1 && size(qd,1)==2 && size(qd,2)==1 ...
         && size(q2d,1)==2 && size(q2d,2)==1
+    
     Y_rgd_bdy = full_regressor_plnr(q,qd,q2d);
     Y = [Y_rgd_bdy(:,1:10), [q2d(1) 0]', Y_rgd_bdy(:,11:20)];
 else

@@ -1,5 +1,13 @@
+% -----------------------------------------------------------------------
+% The script generates regressor for planar 2 degrees of freedom
+% manipulator. It assumes that links of the robot are rigid bodies.
+% Thus the algorithm return rigid body dynamics of the robot in 
+% regressor form.
+% -----------------------------------------------------------------------
+clc; clear all; close all;
+
 % get robot description
-run('plnr_idntfcn.m');
+plnr = parse_urdf('planar_manip.urdf');
 
 % Symbolic generilized coordiates, their first and second deriatives
 q_sym = sym('q%d',[2,1],'real');

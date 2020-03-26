@@ -1,12 +1,13 @@
+clc; clear all; close all;
+
 % get robot description
-run('plnr_idntfcn.m')
+plnr = parse_urdf('planar_manip.urdf');
 
 % Seed the random number generator based on the current time
 rng('shuffle');
 
 % some parameters
 includeMotorDynamics = 1;
-
 
 % limits on positions, velocities, accelerations
 q_min = -2*pi;
@@ -61,7 +62,9 @@ if norm(W2 - W1*beta) > 1e-6
    return
 end
 
-
+% -----------------------------------------------------------------------
+% Find mapping from full strandard parameters to base parameters
+% -----------------------------------------------------------------------
 % Defining parameters symbolically
 m = sym('m%d',[2,1],'real');
 hx = sym('h%d_x',[2,1],'real');
@@ -73,20 +76,19 @@ ixz = sym('i%d_xz',[2,1],'real');
 iyy = sym('i%d_yy',[2,1],'real');
 iyz = sym('i%d_yz',[2,1],'real');
 izz = sym('i%d_zz',[2,1],'real');
-im = sym('im',[1,1],'real');
+im = sym('im',[1,1],'real'); % pendubot has only one motor
 
 % Vector of symbolic parameters
 pi_pndbt_sym = {};
 for i = 1:2
     pi_pndbt_sym{i} = [ixx(i),ixy(i),ixz(i),iyy(i),iyz(i),izz(i),...
-                           hx(i),hy(i),hz(i),m(i)]';
+                       hx(i),hy(i),hz(i),m(i)]';
 end
 
 if includeMotorDynamics
    pi_pndbt_sym{1} = [pi_pndbt_sym{1}; im]; 
 end
 pi_pndbt_sym = [pi_pndbt_sym{1}; pi_pndbt_sym{2}];
-
 
 % Find base parmaters
 pi1 = E(:,1:bb)'*pi_pndbt_sym; % independent paramters
@@ -139,11 +141,11 @@ end
 % Create structure with the result of QR decompositon and save it
 % for further use.
 % ---------------------------------------------------------------------
-plnrBaseQR = struct;
-plnrBaseQR.numberOfBaseParameters = bb;
-plnrBaseQR.permutationMatrix = E;
-plnrBaseQR.beta = beta;
-plnrBaseQR.motorDynamicsIncluded = includeMotorDynamics;
+pndbtBaseQR = struct;
+pndbtBaseQR.numberOfBaseParameters = bb;
+pndbtBaseQR.permutationMatrix = E;
+pndbtBaseQR.beta = beta; % mapping between independent and dependent columns of W
+pndbtBaseQR.motorDynamicsIncluded = includeMotorDynamics;
 
-filename = 'planar2DOF/plnrBaseQR.mat';
-save(filename,'plnrBaseQR')
+filename = 'planar2DOF/pndbtBaseQR.mat';
+save(filename,'pndbtBaseQR')
