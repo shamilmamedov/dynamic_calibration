@@ -1,7 +1,15 @@
+% -----------------------------------------------------------------------
+% In this script identification of inertial parameters of the UR10E
+% is carried out. Two approaches are implemented: ordinary least squares
+% and ordinary least squares with physical feasibility constraint.
+% -----------------------------------------------------------------------
 clc; clear all; close all;
 
 % ------------------------------------------------------------------------
-% Load data and procces it (filter and estimate accelerations)
+% Load raw data and procces it (filter and estimate accelerations).
+% A lot of different trajectories were recorded for identificatio. Each of
+% them result in slightly different dynamic parameters. Some of them
+% describe the dynamics better than others.
 % ------------------------------------------------------------------------
 
 % idntfcnTrjctry = parseURData('ur-19_12_23_free.csv', 1, 2005);
@@ -30,6 +38,9 @@ clc; clear all; close all;
 % idntfcnTrjctry{10} = parseURData('ur-20_02_12-50sec_12harm.csv', 355, 5090);
 
 idntfcnTrjctry{1} = parseURData('ur-20_02_10-30sec_12harm.csv', 635, 3510);
+idntfcnTrjctry{2} = parseURData('ur-20_02_12-40sec_12harm.csv', 500, 4460);
+idntfcnTrjctry{3} = parseURData('ur-20_02_05-20sec_8harm.csv', 320, 2310);
+idntfcnTrjctry{4} = parseURData('ur-20_02_12-50sec_12harm.csv', 355, 5090);
 
 for i = 1:length(idntfcnTrjctry)
     idntfcnTrjctry{i} = filterData(idntfcnTrjctry{i});
@@ -66,31 +77,28 @@ idntfcnTrjctry{4}.i_fltrd = [idntfcnTrjctry{1}.i_fltrd;
 % Generate Regressors based on data
 % ------------------------------------------------------------------------
 % Load matrices that map standard set of paratmers to base parameters
-% load('full2base_mapping.mat');
 load('baseQR.mat'); % load mapping from full parameters to base parameters
-
 
 % load identified drive gains
 load('driveGains.mat')
-drvGains2 = [14.87; 13.26; 11.13; 10.62; 11.03; 11.47]; % deLuca gains
+% drvGains2 = [14.87; 13.26; 11.13; 10.62; 11.03; 11.47]; % deLuca gains
+% some comments about drive gains. Overall, identified gains results in
+% better validation, than gains that are given in deLuca's work.
 
 Tau = {}; Wb = {};
 
 for i = 1:length(idntfcnTrjctry)
     [Tau{i}, Wb{i}] = buildObservationMatrices(idntfcnTrjctry{i}, baseQR, drvGains);
-    [Tau{i+1}, Wb{i+1}] = buildObservationMatrices(idntfcnTrjctry{i}, baseQR, drvGains2);
 end
 
 % Usual least squares
 for i = 1:length(idntfcnTrjctry)
     [pib_OLS(:,i), pifrctn_OLS(:,i)] = ordinaryLeastSquareEstimation(Tau{i}, Wb{i});
-    [pib_OLS(:,i+1), pifrctn_OLS(:,i+1)] = ordinaryLeastSquareEstimation(Tau{i+1}, Wb{i+1});
 end
 
 % Set-up SDP optimization procedure
 for i = 1:length(idntfcnTrjctry)
     [pib_SDP(:,i), pifrctn_SDP(:,i), pi_full] = physicallyConsistentEstimation(Tau{i}, Wb{i}, baseQR);
-    [pib_SDP(:,i+1), pifrctn_SDP(:,i+1), ~] = physicallyConsistentEstimation(Tau{i+1}, Wb{i+1}, baseQR);
 end
 
 

@@ -70,7 +70,7 @@ end
 % regressor - Y*pi = tau, and matlab Robotic Systems Toolbox inverse
 % dynamics command.
 % ------------------------------------------------------------------------
-TEST_DYNAMICS = 1;
+TEST_DYNAMICS = 0;
 
 if TEST_DYNAMICS
     rbt = importrobot('ur10e.urdf');

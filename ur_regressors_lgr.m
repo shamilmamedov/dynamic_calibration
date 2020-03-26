@@ -7,7 +7,7 @@ run('main_ur.m')
 
 generateLoadRegressorFunction = 0;
 generateFullRegressorFunction = 0;
-generateSystemMatricesFunctions = 1;
+generateSystemMatricesFunctions = 0;
 
 % Symbolic generilized coordiates, their first and second deriatives
 q_sym = sym('q%d',[6,1],'real');
@@ -148,14 +148,22 @@ for i = 1:1:6
     end
 end
 
+pi_frcn = sym('pi_frcn_%d%d', [18,1], 'real');
+pi_frcn_tmp = reshape(pi_frcn, [3, 6])';
+tau_frcn = pi_frcn_tmp(:,1).*qd_sym + pi_frcn_tmp(:,2).*sign(qd_sym) + pi_frcn_tmp(:,3);
+
+
 matlabFunction(M_mtrx_sym, 'File','autogen/M_mtrx_fcn',...
-               'Vars',{q_sym, pi_sndrd_sym}, 'Optimize', false);
+               'Vars',{q_sym, pi_sndrd_sym}, 'Optimize', true);
                
 matlabFunction(C_mtrx_sym, 'File','autogen/C_mtrx_fcn',...
-               'Vars',{q_sym, qd_sym, pi_sndrd_sym}, 'Optimize', false);
+               'Vars',{q_sym, qd_sym, pi_sndrd_sym}, 'Optimize', true);
 
 matlabFunction(G_vctr_sym, 'File','autogen/G_vctr_fcn',...
-               'Vars',{q_sym, pi_sndrd_sym}, 'Optimize', false);
+               'Vars',{q_sym, pi_sndrd_sym}, 'Optimize', true);
+
+matlabFunction(tau_frcn, 'File','autogen/F_vctr_fcn',...
+               'Vars',{qd_sym, pi_frcn}, 'Optimize', true);
 
 end
 

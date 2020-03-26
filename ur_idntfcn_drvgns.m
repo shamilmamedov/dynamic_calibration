@@ -1,27 +1,37 @@
+% ------------------------------------------------------------------------
+% The script performs drive gain identification of UR10E robot. 
+% To do that several methods were used: total least squares approach; 
+% ordinary least squares approach; and ordinary least squares with physical
+% feasibility constraints that is solved using semidefinite programming
+% -----------------------------------------------------------------------
 clc; clear all; close all;
 
 % ------------------------------------------------------------------------
-% Load data and procces it (filter and estimate accelerations)
+% Load raw data and procces it (filter and estimate accelerations). 
+% Several trajectories were recorded for unloaded and loaded cases. 
+% Different combination of trajectories provide slighlty different results.
+% Nonetheless, during validation they provide the more or less the same
+% result. So, any unloaded trajectory from the given list can be chosen
 % ------------------------------------------------------------------------
 % unloadedTrajectory = parseURData('ur-20_02_12-50sec_12harm.csv', 355, 5090);
-unloadedTrajectory = parseURData('ur-20_01_31-unload.csv', 300, 2623);
-% unloadedTrajectory = parseURData('ur-20_02_19_14harm50sec.csv', 195, 4966);
+% unloadedTrajectory = parseURData('ur-20_01_31-unload.csv', 300, 2623);
+unloadedTrajectory = parseURData('ur-20_02_19_14harm50sec.csv', 195, 4966);
+
 unloadedTrajectory = filterData(unloadedTrajectory);
 
-% loadedTrajectory = parseURData('ur-20_01_13-load_2600.csv', 250, 2274);
-% loadedTrajectory = parseURData('ur-20_01_31-load.csv', 370, 2881);
 loadedTrajectory = parseURData('ur-20_02_19_14harm50secLoad.csv', 308, 5071);
 loadedTrajectory = filterData(loadedTrajectory);
 
 % ------------------------------------------------------------------------
-% Generate Regressors based on data
+% Generate Regressors based on data. 
+% Here we generate base regressor, thta is obtained form the full regressor
+% by multiplying it by the mapping from full standard paramters
+% to base parametrs using numerical approach based on QR decomposition
 % ------------------------------------------------------------------------
 % Load matrices that map standard set of paratmers to base parameters
-% load('full2base_mapping.mat');
 load('baseQR.mat'); % load mapping from full parameters to base parameters
 E1 = baseQR.permutationMatrix(:,1:baseQR.numberOfBaseParameters);
 m_load = 2.805; 
-% m_load = 2.602; 
 
 % Constracting regressor matrix for unloaded case
 Wb_uldd = []; I_uldd = []; 
@@ -60,6 +70,8 @@ Wl_known = Wl(:,10); % mass of the load is known
 
 
 %% Using total least squares
+% TLS provides rather bad results. Even normilizing by mass and using
+% weighting does not help to improve results
 Wb_tls = [I_uldd   -Wb_uldd   zeros(size(I_uldd,1), size(Wl,2));
           I_ldd    -Wb_ldd    -Wl_uknown    -Wl_known*m_load];
 
@@ -90,6 +102,10 @@ drvGainsTLS2 = pi_tls(1:6)
 
 
 %% Identification of parameters including drive gains
+% Although according to Handbook of robotics and papers of Gautier odinary
+% least squares has correlated noise for correct drive gain estimation
+% it provides good results. Weighted least square does not improve the
+% result.
 Wb_ls = [I_uldd     -Wb_uldd    zeros(size(I_uldd,1), size(Wl_uknown,2));
          I_ldd      -Wb_ldd     -Wl_uknown];
      
@@ -118,6 +134,9 @@ drvGainsOLS2 = pi_tot(1:6)
 
 
 %% Set-up SDP optimization procedure
+% Provides more or less the same result as OLS but with physical
+% consistencty. The drive gains estimated using this appraoch is further
+% used for indetification of inertial parameters
 drv_gns = sdpvar(6,1); % variables for base paramters
 pi_load_unknw = sdpvar(9,1); % varaibles for unknown load paramters
 pi_frctn = sdpvar(18,1);
@@ -131,7 +150,7 @@ pii = baseQR.permutationMatrix*[ eye(baseQR.numberOfBaseParameters), ...
                                 eye(26) ]*[pi_b; pi_d];
 
 % Feasibility contrraints of the link paramteres and rotor inertia
-cnstr = [drv_gns(1)>10];
+cnstr = [drv_gns(1)>10]; % strong constraint on minimum value of K1
 for i = 1:11:66
     link_inertia_i = [pii(i), pii(i+1), pii(i+2); ...
                       pii(i+1), pii(i+3), pii(i+4); ...
@@ -157,7 +176,7 @@ for i = 1:6
    cnstr = [cnstr, pi_frctn(3*i-2)>0, pi_frctn(3*i-1)>0];  
 end
 
-% Defining pbjective function
+% Defining objective function
 t1 = [zeros(size(I_uldd,1),1); -Wl(:,end)*m_load];
 
 t2 = [-I_uldd, Wb_uldd, zeros(size(Wb_uldd,1), size(Wl,2)-1); ...
