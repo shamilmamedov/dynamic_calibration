@@ -1,7 +1,7 @@
 function pendubot = pendubotDataProcessing(file)
 
-clc; clear all; close all;
-file = 'position_A_1.2_v_1.mat';
+% clc; clear all; close all;
+% file = 'position_A_1.2_v_1.mat';
 
 % load raw data
 rawData = load(file);
@@ -51,9 +51,8 @@ pendubot.elbw_velocity_filtered = filtfilt(vlcty_fltr_elbw, pendubot.elbw_veloci
 pendubot.shldr_velocity_estimated = filtfilt(vlcty_fltr_shldr, pendubot.shldr_velocity_estimated);
 pendubot.elbw_velocity_estimated = filtfilt(vlcty_fltr_elbw, pendubot.elbw_velocity_estimated);
 
-plotJointPositions(pendubot)
-plotJointVelocities(pendubot);
-return
+% plotJointPositions(pendubot)
+% plotJointVelocities(pendubot);
 
 % estimating accelerations based on filtered velocities
 q2d1 = zeros(size(pendubot.shldr_velocity));
@@ -96,6 +95,7 @@ pendubot.torque_filtered = filtfilt(trq_fltr, pendubot.torque);
 
 
 
+return
 
 plotJointPositions(pendubot)
 plotJointVelocities(pendubot); 

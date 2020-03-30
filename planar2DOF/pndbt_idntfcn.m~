@@ -68,19 +68,17 @@ Qs = diag(abc.^2); % matrix of reciprocals of the squares of the semi-axes
 % Density realizability of the second momentum (in an ellipsoid)
 % 
 Sigma_c_1 = 0.5*trace(plnr.I(:,:,1))*eye(3) - plnr.I(:,:,1); % density weighted covariance
-Epsilon_pi_1 = inv(Sigma_c_1/plnr.m(1)); % covariance ellipsoid
-Q(:,:,1) = blkdiag(-Epsilon_pi_1, 1);
+Epsilon_pi_1 = inv(Sigma_c_1/plnr.m(1))
+[u1, s1, v1] = svd(Epsilon_pi_1)
 
-Sigma_c_2 = 0.5*trace(plnr.I(:,:,2))*eye(3) - plnr.I(:,:,2); % density weighted covariance
-Epsilon_pi_2 = inv(Sigma_c_2/plnr.m(2)); % covariance ellipsoid
-Q(:,:,2) = blkdiag(-Epsilon_pi_2, 1);
+
+return
 
 % pi_CAD = [plnr.pi(:,1); 0; plnr.pi(:,2)]; % parameters from the CAD
 % w_pi = 1e-6; % regulization term
 
 cnstr = [pii(10) < 1.2, pii(21) < 0.5]; % constraints on the mass
 if physicalConsistency
-    k = 1;
     for i = 1:11:21
         link_inertia_i = [pii(i),   pii(i+1), pii(i+2); ...
                           pii(i+1), pii(i+3), pii(i+4); ...
@@ -88,19 +86,14 @@ if physicalConsistency
         frst_mmnt_i = pii(i+6:i+8);
         
         % Positive definiteness of the generalized mass matrix
-        Ji = [0.5*trace(link_inertia_i)*eye(3) - link_inertia_i, ...
+        Di = [0.5*trace(link_inertia_i)*eye(3) - link_inertia_i, ...
                 frst_mmnt_i; frst_mmnt_i', pii(i+9)];
 
         % First moment realizability on the ellipsoid
         Ci = [pii(i+9), frst_mmnt_i' - pii(i+9)*xs';
               frst_mmnt_i - pii(i+9)*xs, pii(i+9)*Qs];
-        
-        % Second moment realizability on the ellipsoid
-        Pi = trace(Ji*Q(:,:,k));
             
-        cnstr = [cnstr, Ji > 0, Ci >= 0, Pi >= 0];
-        
-        k = k + 1;
+        cnstr = [cnstr, Di > 0, Ci >= 0];
     end
 else
     for i = 1:11:21

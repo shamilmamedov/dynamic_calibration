@@ -1,3 +1,8 @@
+% This script finds base parameters of the of the pendubot robot.
+% It includes motor dynamics by modeling reflected motor inertia.
+% Base parameters are found using numerica methods, namely 
+% QR decomposition.
+% ----------------------------------------------------------------------
 clc; clear all; close all;
 
 % get robot description
@@ -5,9 +10,6 @@ plnr = parse_urdf('planar_manip.urdf');
 
 % Seed the random number generator based on the current time
 rng('shuffle');
-
-% some parameters
-includeMotorDynamics = 1;
 
 % limits on positions, velocities, accelerations
 q_min = -2*pi;
@@ -27,11 +29,7 @@ for i = 1:20
     qd_rnd = -qd_max + 2*qd_max.*rand(2,1);
     q2d_rnd = -q2d_max + 2*q2d_max.*rand(2,1);
     
-    if includeMotorDynamics
-        Yi = regressorWithMotorDynamicsPndbt(q_rnd, qd_rnd, q2d_rnd);
-    else
-        Yi = full_regressor_plnr(q_rnd, qd_rnd, q2d_rnd);
-    end
+    Yi = regressorWithMotorDynamicsPndbt(q_rnd, qd_rnd, q2d_rnd);
     W = vertcat(W,Yi);
 end
 
@@ -84,10 +82,8 @@ for i = 1:2
     pi_pndbt_sym{i} = [ixx(i),ixy(i),ixz(i),iyy(i),iyz(i),izz(i),...
                        hx(i),hy(i),hz(i),m(i)]';
 end
-
-if includeMotorDynamics
-   pi_pndbt_sym{1} = [pi_pndbt_sym{1}; im]; 
-end
+% add reflected motor inertia to the list of parameters
+pi_pndbt_sym{1} = [pi_pndbt_sym{1}; im];
 pi_pndbt_sym = [pi_pndbt_sym{1}; pi_pndbt_sym{2}];
 
 % Find base parmaters
@@ -103,11 +99,8 @@ pi_lgr_base3 = [eye(bb) beta]*E'*pi_pndbt_sym;
 % Validation of obtained mappings
 % -----------------------------------------------------------------------
 fprintf('Validation of mapping from standard parameters to base ones\n')
-if includeMotorDynamics
-    plnr.pi = [plnr.pi(:,1); rand; plnr.pi(:,2)];
-else
-    plnr.pi = [plnr.pi(:,1); plnr.pi(:,2)];
-end
+% as in urdf motor inertia is not given, we randomly generate it
+plnr.pi = [plnr.pi(:,1); rand; plnr.pi(:,2)];
 
 % On random positions, velocities, aceeleations
 for i = 1:100
@@ -115,11 +108,7 @@ for i = 1:100
     qd_rnd = -qd_max + 2*qd_max.*rand(2,1);
     q2d_rnd = -q2d_max + 2*q2d_max.*rand(2,1);
     
-    if includeMotorDynamics
-        Yi = regressorWithMotorDynamicsPndbt(q_rnd,qd_rnd,q2d_rnd);
-    else
-        Yi = full_regressor_plnr(q_rnd,qd_rnd,q2d_rnd);
-    end
+    Yi = regressorWithMotorDynamicsPndbt(q_rnd,qd_rnd,q2d_rnd);
     tau_full = Yi*plnr.pi;
     
     pi_lgr_base = [eye(bb) beta]*E'*plnr.pi;
@@ -145,7 +134,7 @@ pndbtBaseQR = struct;
 pndbtBaseQR.numberOfBaseParameters = bb;
 pndbtBaseQR.permutationMatrix = E;
 pndbtBaseQR.beta = beta; % mapping between independent and dependent columns of W
-pndbtBaseQR.motorDynamicsIncluded = includeMotorDynamics;
+
 
 filename = 'planar2DOF/pndbtBaseQR.mat';
 save(filename,'pndbtBaseQR')
