@@ -38,9 +38,9 @@ clc; clear all; close all;
 % idntfcnTrjctry{10} = parseURData('ur-20_02_12-50sec_12harm.csv', 355, 5090);
 
 idntfcnTrjctry{1} = parseURData('ur-20_02_10-30sec_12harm.csv', 635, 3510);
-idntfcnTrjctry{2} = parseURData('ur-20_02_12-40sec_12harm.csv', 500, 4460);
-idntfcnTrjctry{3} = parseURData('ur-20_02_05-20sec_8harm.csv', 320, 2310);
-idntfcnTrjctry{4} = parseURData('ur-20_02_12-50sec_12harm.csv', 355, 5090);
+% idntfcnTrjctry{2} = parseURData('ur-20_02_12-40sec_12harm.csv', 500, 4460);
+% idntfcnTrjctry{3} = parseURData('ur-20_02_05-20sec_8harm.csv', 320, 2310);
+% idntfcnTrjctry{4} = parseURData('ur-20_02_12-50sec_12harm.csv', 355, 5090);
 
 for i = 1:length(idntfcnTrjctry)
     idntfcnTrjctry{i} = filterData(idntfcnTrjctry{i});

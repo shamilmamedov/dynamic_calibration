@@ -20,7 +20,7 @@ end
 tau_msrd = []; 
 i_OLS = {}; i_SDP = {};
 tau_OLS = {}; tau_SDP = {};
-for j = 1:length(idntfcnTrjctry)
+for j = 1:length(idntfcnTrjctry) + 2
     i_OLS{j} = [];
     i_SDP{j} = [];
     tau_SDP{j} = [];
@@ -52,7 +52,8 @@ for i = 1:length(vldtnTrjctry.t)
         tau_SDP{j} = horzcat(tau_SDP{j}, [Ybi Yfrctni]*[pib_SDP(:,j); pifrctn_SDP(:,j)]);
         tau_OLS{j} = horzcat(tau_OLS{j}, [Ybi Yfrctni]*[pib_OLS(:,j); pifrctn_OLS(:,j)]);
     end
-    
+    i_SDP{j+1} = horzcat(i_SDP{j+1}, diag(drvGains)\([Ybi Yfrctni]*[1.1*pib_SDP(:,j); 1.1*pifrctn_SDP(:,j)]));
+    i_SDP{j+2} = horzcat(i_SDP{j+2}, diag(drvGains)\([Ybi Yfrctni]*[0.9*pib_SDP(:,j); 0.9*pifrctn_SDP(:,j)]));
 end
 
 %%
@@ -62,7 +63,7 @@ for i = 1:6
     figure
     hold on
     plot(vldtnTrjctry.t, vldtnTrjctry.i(:,i), 'k-')
-    for j = 1:length(idntfcnTrjctry)
+    for j = 1:length(idntfcnTrjctry)+2
         plot(vldtnTrjctry.t, i_SDP{j}(i,:), clrs{j}, 'LineWidth',1.5)
     end
     ylabel('\tau, Nm')
