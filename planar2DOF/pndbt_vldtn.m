@@ -4,8 +4,8 @@
 % -----------------------------------------------------------------------
 
 % load and process pendubot data for valication
-vldtnData = pendubotDataProcessing('position_A_0.3141_v_0.5.mat');
-% vldtnData = pendubotDataProcessing('position_A_0.3141_v_1.mat');
+% vldtnData = pendubotDataProcessing('position_A_0.3141_v_0.5.mat');
+vldtnData = pendubotDataProcessing('position_A_0.3141_v_1.mat');
 % vldtnData = pendubotDataProcessing('position_A_0.3141_v_2.mat');
 
 % get inertial parameters from CAD to compare with identification
@@ -26,7 +26,8 @@ for i = vldtnRange
     
     tau_prdctd_OLS = horzcat(tau_prdctd_OLS, [Ybi, Yfrctni]*pi_hat_OLS);
     tau_prdctd_SDP = horzcat(tau_prdctd_SDP, [Ybi, Yfrctni]*[pi_b; pi_frctn]);
-    tau_prdctd_CAD = horzcat(tau_prdctd_CAD, [Yi, Yfrctni] * [pi_CAD; pi_frctn]);
+%     tau_prdctd_CAD = horzcat(tau_prdctd_CAD, [Yi, Yfrctni] * [pi_CAD; pi_frctn]);
+    tau_prdctd_CAD = horzcat(tau_prdctd_CAD, Yi*pi_CAD);
 end
 
 % plot real torque and predictions

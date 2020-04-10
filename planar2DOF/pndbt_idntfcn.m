@@ -4,8 +4,8 @@ clc; clear all; close all;
 plnr = parse_urdf('planar_manip.urdf');
 
 % load and process data
-pendubot = pendubotDataProcessing('step_A_1.57.mat');
-% pendubot = pendubotDataProcessing('interp5_1.5.mat');
+% pendubot = pendubotDataProcessing('step_A_1.57.mat');
+pendubot = pendubotDataProcessing('interp5_2.mat');
 
 % load mapping from standard parameters to base parameters
 load('pndbtBaseQR.mat')
@@ -55,7 +55,7 @@ pi_hat_OLS = (Wb'*Wb)\(Wb'*Tau);
 % Then it is possible to assign realizability of the first and second
 % moments on the ellipsoid. For that more or less accurate CAD parameter
 % required.
-physicalConsistency = 0; % if 1 phsycal, if 0 then semiphysical
+physicalConsistency = 1; % if 1 phsycal, if 0 then semiphysical
 firstMomentRealizability = 0; % DOESN"T WORK FOR NOW!!!!!!!!!
 secondMomentRealizability = 0;
 
@@ -106,7 +106,7 @@ if physicalConsistency
         frst_mmnt_i = pii(i+6:i+8);
         
         % Positive definiteness of the generalized mass matrix
-        Ji = [0.5*trace(link_inertia_i)*eye(3) - link_inertia_i, ...
+        Ji = [trace(link_inertia_i)/2*eye(3) - link_inertia_i, ...
                 frst_mmnt_i; frst_mmnt_i', pii(i+9)];
             
         cnstr = [cnstr, Ji > 0];
@@ -150,10 +150,19 @@ end
 % cnstr = [cnstr, pi_frctn(3) == 0, pi_frctn(6) == 0];
 
 % Defining pbjective function
-obj = norm(Tau - Wb*[pi_b; pi_frctn], 2)^2;% + w_pi*norm(pii - pi_CAD);
+obj = norm(Tau - Wb*[pi_b; pi_frctn], 2)^2 + w_pi*norm(pii - pi_CAD)^2;
 
 % Solving sdp problem
-sol2 = optimize(cnstr, obj, sdpsettings('solver','sdpt3'));
+optns = sdpsettings;
+optns.solver = 'sdpt3';
+optns.verbose = 1;
+optns.showprogress = 1;
+diagnostics = optimize(cnstr, obj, optns);
+
+if diagnostics.problem ~= 0
+    disp('Solver was not able to solve the problem')
+    return
+end
 
 pi_b = value(pi_b) % variables for base paramters
 pi_frctn = value(pi_frctn)

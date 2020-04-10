@@ -4,8 +4,8 @@ clc; clear all; close all;
 plnr = parse_urdf('planar_manip.urdf');
 
 % load and process data
-% pendubot = pendubotDataProcessing('step_A_1.57.mat');
-pendubot = pendubotDataProcessing('interp5_0.5.mat');
+pendubot = pendubotDataProcessing('step_A_1.57.mat');
+% pendubot = pendubotDataProcessing('interp5_1.5.mat');
 
 % load mapping from standard parameters to base parameters
 load('pndbtBaseQR.mat')
@@ -55,9 +55,9 @@ pi_hat_OLS = (Wb'*Wb)\(Wb'*Tau);
 % Then it is possible to assign realizability of the first and second
 % moments on the ellipsoid. For that more or less accurate CAD parameter
 % required.
-physicalConsistency = 1; % if 1 phsycal, if 0 then semiphysical
-firstMomentRealizability = 1; % DOESN"T WORK FOR NOW!!!!!!!!!
-secondMomentRealizability = 1;
+physicalConsistency = 0; % if 1 phsycal, if 0 then semiphysical
+firstMomentRealizability = 0; % DOESN"T WORK FOR NOW!!!!!!!!!
+secondMomentRealizability = 0;
 
 pi_frctn = sdpvar(6,1);
 pi_b = sdpvar(pndbtBaseQR.numberOfBaseParameters, 1); % variables for base paramters
@@ -75,10 +75,10 @@ pii = pndbtBaseQR.permutationMatrix*[eye(pndbtBaseQR.numberOfBaseParameters), ..
 % (v - vc)'Qs^-1(v - vc), Qs = diag([xc^2 yc^2 zc^2])
 % where xs = [xc yc zc]' is vector defining center of ellipsoid, 
 % abc = [xr yr zr]' is semiaxis length
-xs(:,1) = [0.13 0 0]'; % center of the ellipsoid
-xs(:,2) = [0.13 0 0]';
+xs(:,1) = [0.15 0 0]'; % center of the ellipsoid
+xs(:,2) = [0.15 0 0]';
 abc(:,1) = [0.13 0.01 0.005]'; % semiaxis length
-abc(:,2) = [0.13 0.01 0.01]';
+abc(:,2) = [0.13 0.01 0.005]';
 Qs(:,:,1) = diag(abc(:,1).^2); % matrix of reciprocals of the squares of the semi-axes
 Qs(:,:,2) = diag(abc(:,2).^2);
 
@@ -115,7 +115,7 @@ if physicalConsistency
         if firstMomentRealizability
             Ci = [pii(i+9), frst_mmnt_i' - pii(i+9)*xs(:,k)';
                   frst_mmnt_i - pii(i+9)*xs(:,k), pii(i+9)*Qs(:,:,k)];
-            cnstr = [cnstr, Ci >= 0];
+            cnstr = [cnstr, Ci > 0];
         end
               
         % Second moment realizability on the ellipsoid
@@ -147,13 +147,17 @@ for i = 1:2
 end
 
 %!!!!!!!!!!!!!!!!
-cnstr = [cnstr, pi_frctn(3) == 0, pi_frctn(6) == 0];
+% cnstr = [cnstr, pi_frctn(3) == 0, pi_frctn(6) == 0];
 
 % Defining pbjective function
 obj = norm(Tau - Wb*[pi_b; pi_frctn], 2)^2;% + w_pi*norm(pii - pi_CAD);
 
 % Solving sdp problem
-sol2 = optimize(cnstr, obj, sdpsettings('solver','sdpt3'));
+optns = sdpsettings;
+optns.solver = 'sdpt3';
+optns.verbose = 1;
+optns.sh
+diagnostics = optimize(cnstr, obj, optns);
 
 pi_b = value(pi_b) % variables for base paramters
 pi_frctn = value(pi_frctn)
