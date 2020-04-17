@@ -64,6 +64,8 @@ Y = simplify(t1 - dLagr_dq);
 Y_fcn = matlabFunction(Y,'Vars',{q_sym, qd_sym, q2d_sym});
 
 
+
+
 % Testing if regressor computed correctly using matlab Robotics Robotics
 rbt = importrobot('planar_manip.urdf');
 rbt.DataFormat = 'column';

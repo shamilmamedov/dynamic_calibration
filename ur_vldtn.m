@@ -5,8 +5,8 @@ close all;
 staticValidation = 0;
 
 if ~staticValidation
-    vldtnTrjctry = parseURData('ur-20_01_17-ptp_10_points.csv', 1, 5346);
-%     vldtnTrjctry = parseURData('ur-19_12_23_free.csv', 1, 2005);
+%     vldtnTrjctry = parseURData('ur-20_01_17-ptp_10_points.csv', 1, 5346);
+    vldtnTrjctry = parseURData('ur-19_12_23_free.csv', 1, 2005);
     vldtnTrjctry = filterData(vldtnTrjctry);
 else
     load('vldtnTrjctrySttcs.mat');
@@ -20,7 +20,7 @@ end
 tau_msrd = []; 
 i_OLS = {}; i_SDP = {};
 tau_OLS = {}; tau_SDP = {};
-for j = 1:length(idntfcnTrjctry) + 2
+for j = 1:length(idntfcnTrjctry)
     i_OLS{j} = [];
     i_SDP{j} = [];
     tau_SDP{j} = [];
@@ -52,32 +52,114 @@ for i = 1:length(vldtnTrjctry.t)
         tau_SDP{j} = horzcat(tau_SDP{j}, [Ybi Yfrctni]*[pib_SDP(:,j); pifrctn_SDP(:,j)]);
         tau_OLS{j} = horzcat(tau_OLS{j}, [Ybi Yfrctni]*[pib_OLS(:,j); pifrctn_OLS(:,j)]);
     end
-    i_SDP{j+1} = horzcat(i_SDP{j+1}, diag(drvGains)\([Ybi Yfrctni]*[1.1*pib_SDP(:,j); 1.1*pifrctn_SDP(:,j)]));
-    i_SDP{j+2} = horzcat(i_SDP{j+2}, diag(drvGains)\([Ybi Yfrctni]*[0.9*pib_SDP(:,j); 0.9*pifrctn_SDP(:,j)]));
 end
 
-%%
-clrs = {'r', 'b', 'm', 'y'};
 
-for i = 1:6
+%%
+% clrs = {'r', 'b', 'm', 'y'};
+% 
+% for i = 1:6
+%     figure
+%     hold on
+%     plot(vldtnTrjctry.t, vldtnTrjctry.i(:,i), 'k-')
+%     for j = 1:length(idntfcnTrjctry)
+%         plot(vldtnTrjctry.t, i_SDP{j}(i,:), clrs{j}, 'LineWidth',1.5)
+%     end
+%     ylabel('\tau, Nm')
+%     xlabel('t, sec')
+%     grid on
+% end
+
+%%
+close all
+
+
+dlta_tau_1 = tau_msrd(1,:) - tau_SDP{1}(1,:);
+dlta_tau_2 = tau_msrd(2,:) - tau_SDP{1}(2,:);
+dlta_tau_3 = tau_msrd(3,:) - tau_SDP{1}(3,:);
+dlta_tau_4 = tau_msrd(4,:) - tau_SDP{1}(4,:);
+figure
+histogram(dlta_tau_3,'Normalization','pdf')
+
+
+%% Figure for paper
+close all
+
+
+fig = figure;
+fig.Units = 'centimeters';
+fig.InnerPosition = [10, 10, 15, 5]; %[left bottom width height]
+fig.GraphicsSmoothing = 'on';
+subplot(1,2,1)
+ax = gca;
+ax.TickLabelInterpreter = 'latex';
+plot(vldtnTrjctry.t, tau_msrd(2,:), 'k-')
+hold on
+plot(vldtnTrjctry.t, tau_SDP{1}(2,:), 'r', 'LineWidth',1.5)
+plot(vldtnTrjctry.t, tau_msrd(3,:), 'b-')
+plot(vldtnTrjctry.t, tau_SDP{1}(3,:), 'm-', 'LineWidth',1.5)
+plot(vldtnTrjctry.t, tau_msrd(1,:))
+plot(vldtnTrjctry.t, tau_SDP{1}(1,:), 'LineWidth',1.5)
+xlim([0 20])
+xlabel('$t$, sec', 'interpreter', 'latex')
+ylabel('$\tau_{1-3}$, Nm', 'interpreter', 'latex')
+grid minor
+
+
+% fig = figure;
+% fig.Units = 'centimeters';
+% fig.InnerPosition = [10, 10, 9, 5]; %[left bottom width height]
+% fig.GraphicsSmoothing = 'on';
+subplot(1,2,2)
+ax = gca;
+ax.TickLabelInterpreter = 'latex';
+plot(vldtnTrjctry.t, tau_msrd(4,:), 'k-')
+hold on
+plot(vldtnTrjctry.t, tau_SDP{1}(4,:), 'r', 'LineWidth',1.5)
+plot(vldtnTrjctry.t, tau_msrd(5,:), 'b-')
+plot(vldtnTrjctry.t, tau_SDP{1}(5,:), 'm-', 'LineWidth',1.5)
+plot(vldtnTrjctry.t, tau_msrd(6,:))
+plot(vldtnTrjctry.t, tau_SDP{1}(6,:), 'LineWidth',1.5)
+xlim([0 20])
+xlabel('$t$, sec', 'interpreter', 'latex')
+grid minor
+
+hgexport(fig,'HRI_paper/vldtn')
+
+return
+figure
+plot(vldtnTrjctry.t, tau_msrd(2,:), 'k-')
+hold on
+plot(vldtnTrjctry.t, tau_msrd(3,:), 'k-')
+plot(vldtnTrjctry.t, tau_SDP{1}(2,:), clrs{1}, 'LineWidth',1.5)
+plot(vldtnTrjctry.t, tau_SDP{1}(3,:), clrs{1}, 'LineWidth',1.5)
+
+figure
+plot(vldtnTrjctry.t, tau_msrd(1,:), 'k-')
+hold on
+plot(vldtnTrjctry.t, tau_msrd(4,:), 'k-')
+plot(vldtnTrjctry.t, tau_SDP{1}(1,:), clrs{1}, 'LineWidth',1.5)
+plot(vldtnTrjctry.t, tau_SDP{1}(4,:), clrs{1}, 'LineWidth',1.5)
+
+figure
+plot(vldtnTrjctry.t, tau_msrd(5,:), 'k-')
+hold on
+plot(vldtnTrjctry.t, tau_msrd(6,:), 'k-')
+plot(vldtnTrjctry.t, tau_SDP{1}(5,:), clrs{1}, 'LineWidth',1.5)
+plot(vldtnTrjctry.t, tau_SDP{1}(6,:), clrs{1}, 'LineWidth',1.5)
+
+return
+for i = 1:3
     figure
+    plot(vldtnTrjctry.t, tau_msrd(i,:), 'k-')
     hold on
-    plot(vldtnTrjctry.t, vldtnTrjctry.i(:,i), 'k-')
-    for j = 1:length(idntfcnTrjctry)+2
-        plot(vldtnTrjctry.t, i_SDP{j}(i,:), clrs{j}, 'LineWidth',1.5)
+    for j = 1:length(idntfcnTrjctry)
+        plot(vldtnTrjctry.t, tau_SDP{j}(i,:), clrs{j}, 'LineWidth',1.5)
     end
     ylabel('\tau, Nm')
     xlabel('t, sec')
     grid on
 end
-
-%% 
-% no_joint = 4;
-% figure
-% plot(Tau1(no_joint,:), 'r')
-% hold on
-% plot(tau_SDP{1}(no_joint,:), 'b')
-% grid on
 
 
 

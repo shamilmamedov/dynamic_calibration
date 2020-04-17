@@ -29,25 +29,20 @@ for i = 1:3
 end
 
 %% Validation of statics
-q_sttcs(:,1) = [0.037, -1.598]'; 
-q_sttcs(:,2) = [-1.2, -0.36]'; 
-q_sttcs(:,3) = [-0.8, -0.764]';
+q_sttcs1 = [0.037 - pi/2, -1.598]'; 
+q_sttcs2 = [-1.2 - pi/2, -0.36]'; 
+q_sttcs3 = [-0.8 - pi/2, -0.764]';
 
-tau_sttcs(1) = -1.3 ;
-tau_sttcs(2) = -0.4;
-tau_sttcs(3) = -0.87;
+tau_sttcs1 = -1.3 ;
+tau_sttcs2 = -0.4;
+tau_sttcs3 = -0.87;
 
-for i = 1:3
-    Y_sttcs(:,:,i) = regressorWithMotorDynamicsPndbt(q_sttcs(:,i), zeros(2,1), zeros(2,1));
-    Yfrctn_sttcs(:,:,i) = frictionRegressor(zeros(2,1));
-end
+Y1 = regressorWithMotorDynamicsPndbt(q_sttcs1, zeros(2,1), zeros(2,1));
+Yfrctn1 = frictionRegressor(zeros(2,1));
 
-for i = 1:3
-   for k = 1:3
-      tau_hat_sttcs(i,k) = ([Y_sttcs(:,:,i) Yfrctn_sttcs(:,:,i)]*[pi_stnd{k}; pi_frctn{k}])'*[1; 0]; 
-   end
-end
-
+tau_sttc = [Y1 Yfrctni]*[pi_stnd{1}; pi_frctn{1}]
+tau_sttc = [Y1 Yfrctni]*[pi_stnd{2}; pi_frctn{2}]
+tau_sttc = [Yi Yfrctni]*[pi_stnd{3}; pi_frctn{3}]
 
 %% plot real torque and predictions
 

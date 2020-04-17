@@ -38,9 +38,11 @@ clc; clear all; close all;
 % idntfcnTrjctry{10} = parseURData('ur-20_02_12-50sec_12harm.csv', 355, 5090);
 
 idntfcnTrjctry{1} = parseURData('ur-20_02_10-30sec_12harm.csv', 635, 3510);
+% idntfcnTrjctry{2} = parseURData('ur-20_02_19_14harm50sec.csv', 195, 4966);
 % idntfcnTrjctry{2} = parseURData('ur-20_02_12-40sec_12harm.csv', 500, 4460);
 % idntfcnTrjctry{3} = parseURData('ur-20_02_05-20sec_8harm.csv', 320, 2310);
 % idntfcnTrjctry{4} = parseURData('ur-20_02_12-50sec_12harm.csv', 355, 5090);
+
 
 for i = 1:length(idntfcnTrjctry)
     idntfcnTrjctry{i} = filterData(idntfcnTrjctry{i});
@@ -121,15 +123,15 @@ identifiedUR10E.linearFrictionParameters = pi_frctn;
 
 %% Statisitical analysis
 % unbiased estimation of the standard deviation
-sqrd_sgma_e = norm(Tau_uldd - Wb_uldd*[pi_b; pi_frctn], 2)^2/...
-                (size(Wb_uldd, 1) - size(Wb_uldd, 2));
+sqrd_sgma_e = norm(Tau{1} - Wb{1}*[pib_SDP(:,1); pifrctn_SDP(:,1)], 2)^2/...
+                (size(Wb{1}, 1) - size(Wb{1}, 2));
             
 % the covariance matrix of the estimation error
-Cpi = sqrd_sgma_e*inv(Wb_uldd'*Wb_uldd);
+Cpi = sqrd_sgma_e*inv(Wb{1}'*Wb{1});
 sgma_pi = sqrt(diag(Cpi));
 
 % relative standard deviation
-sgma_pi_rltv = sgma_pi./abs([pi_b; pi_frctn]);
+sgma_pi_rltv = sgma_pi./abs([pib_SDP(:,1); pifrctn_SDP(:,1)]);
 
 
 %% Functions
@@ -229,6 +231,7 @@ obj = norm(Tau - Wb*[pi_b; pi_frctn]);
 
 % Solving sdp problem
 sol2 = optimize(cnstr, obj, sdpsettings('solver','sdpt3'));
+disp(sol2.problem)
 
 pib_SDP = value(pi_b); % variables for base paramters
 pifrctn_SDP = value(pi_frctn);

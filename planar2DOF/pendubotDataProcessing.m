@@ -3,8 +3,9 @@ function pendubot = pendubotDataProcessing(file)
 % clc; clear all; close all;
 % 
 % file = 'step_A_1.57.mat';
-% file = 'position_A_0.3141_v_0.5.mat';
-% file = 'interp5_2.mat';
+% file = 'position_A_0.3141_v_2.mat';
+% file = 'interp5_1.5.mat';
+% file = 'harmonic_A_0.7854_v_0.5.mat';
 
 % load raw data from the robot
 rawData = load(file);
@@ -12,33 +13,36 @@ rawData = load(file);
 % there is some issue with synchronizing ROS data because three point
 % numerical differentiation explodes. That is why first I remove some data
 % points in order to avoid it.
-rowsToDelete = find(diff(rawData.data(:,1))<1e-3) + 1;
-rawData.data(rowsToDelete,:) = [];
+% rowsToDelete = find(diff(rawData.data(:,1))<1e-3) + 1;
+% rawData.data(rowsToDelete,:) = [];
+
 
 % stupid way to remove an issue with elbow velocity
-rowsToDelete = find(abs(diff(rawData.data(:,5))) > 1) + 1;
-rawData.data(rowsToDelete,:) = [];
-
-rowsToDelete = find(abs(diff(rawData.data(:,5))) > 1) + 1;
-rawData.data(rowsToDelete,:) = [];
-
+% dlta_vel_max = 5;
+% while ~isempty(find(abs(diff(rawData.data(:,5))) > dlta_vel_max, 1))
+%     rowsToDelete = find(abs(diff(rawData.data(:,5))) > dlta_vel_max, 1) + 1;
+%     rawData.data(rowsToDelete,:) = [];
+% end
+% 
+% rowsToDelete = find(diff(rawData.data(:,1))<1e-3) + 1;
+% rawData.data(rowsToDelete,:) = [];
 
 % separate data and take into account offsets
 pendubot.time = rawData.data(:,1) - rawData.data(1,1);
 pendubot.current = -rawData.data(:,6);
 pendubot.torque = -rawData.data(:,7);
-pendubot.shldr_position = rawData.data(:,2) - pi/2;
+% pendubot.shldr_position = rawData.data(:,2) - pi/2;
+pendubot.shldr_position = rawData.data(:,2);
 pendubot.elbw_position = rawData.data(:,3);
 pendubot.shldr_velocity = rawData.data(:,4);
 pendubot.elbw_velocity = rawData.data(:,5);
-
 
 % filter position to get rid of errors
 pstn_fltr = designfilt('lowpassiir','FilterOrder', 5, ...
                        'HalfPowerFrequency', 0.05, 'DesignMethod','butter');
                    
-pendubot.shldr_position_fltrd = filtfilt(pstn_fltr, pendubot.shldr_position);
-pendubot.elbw_position_fltrd = filtfilt(pstn_fltr, pendubot.elbw_position);
+pendubot.shldr_position_filtered = filtfilt(pstn_fltr, pendubot.shldr_position);
+pendubot.elbw_position_filtered = filtfilt(pstn_fltr, pendubot.elbw_position);
 
 
 % filter velocties with zero phase filter
@@ -97,7 +101,7 @@ plot(pendubot.time, pendubot.torque_filtered, 'LineWidth', 1.5)
 plot(pendubot.time, pendubot.current*0.123)
 xlabel('$t$, sec','interpreter', 'latex')
 ylabel('$\tau$, Nm', 'interpreter', 'latex');
-legend('torque measured', 'torque filtered')
+legend('torque measured', 'torque filtered', 'current * k')
 grid on
 end
 
@@ -106,20 +110,19 @@ figure
 subplot(2,1,1)
     plot(pendubot.time, pendubot.shldr_position)
     hold on
-    plot(pendubot.time, pendubot.shldr_position_fltrd)
-%     xlim([0 5])
+    plot(pendubot.time, pendubot.shldr_position_filtered)
     xlabel('$t$, sec','interpreter', 'latex')
     ylabel('$q_1$, rad','interpreter', 'latex')
     grid on
-    legend('measured', 'desired')
+    legend('measured', 'filtered')
 subplot(2,1,2)
     plot(pendubot.time, pendubot.elbw_position)
     hold on
-    plot(pendubot.time, pendubot.elbw_position_fltrd)
-%     xlim([0 5])
+    plot(pendubot.time, pendubot.elbw_position_filtered)
     xlabel('$t$, sec','interpreter', 'latex')
     ylabel('$q_2$, rad','interpreter', 'latex')
     grid on
+    legend('measured', 'filtered')
 end
 
 function plotJointVelocities(pendubot)
@@ -128,21 +131,17 @@ subplot(2,1,1)
     plot(pendubot.time, pendubot.shldr_velocity)
     hold on
     plot(pendubot.time, pendubot.shldr_velocity_filtered)
-%     plot(pendubot.time, pendubot.shldr_velocity_estimated)
-%     xlim([0 5])
     xlabel('$t$, sec','interpreter', 'latex')
     ylabel('$\dot{q}_1$, rad/s','interpreter', 'latex')
-    legend('measured', 'filtered', 'estimated')
+    legend('measured', 'filtered')
     grid on
 subplot(2,1,2)
     plot(pendubot.time, pendubot.elbw_velocity)
     hold on
     plot(pendubot.time, pendubot.elbw_velocity_filtered)
-%     plot(pendubot.time, pendubot.elbw_velocity_estimated)
-%     xlim([0 5])
     xlabel('t, sec','interpreter', 'latex')
     ylabel('$\dot{q}_2$, rad/s','interpreter', 'latex')
-    legend('measured', 'filtered', 'estimated')
+    legend('measured', 'filtered')
     grid on
 end
 

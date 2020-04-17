@@ -1,7 +1,7 @@
 function plnr_visualize(q, plnr)
 
 figure
-for j = 1:10:length(q)
+for j = 1:5:length(q)
     clf
     qj = q(j,:);
 
