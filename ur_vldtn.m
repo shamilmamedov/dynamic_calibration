@@ -73,14 +73,17 @@ end
 %%
 close all
 
+dlta_tau = {};
+rms = {};
+for i = 1:6
+    dlta_tau{i} = tau_msrd(i,:) - tau_SDP{1}(i,:);
+    rms{i} = sqrt(dlta_tau{i}*dlta_tau{i}'/length(dlta_tau{i}));
+end
 
-dlta_tau_1 = tau_msrd(1,:) - tau_SDP{1}(1,:);
-dlta_tau_2 = tau_msrd(2,:) - tau_SDP{1}(2,:);
-dlta_tau_3 = tau_msrd(3,:) - tau_SDP{1}(3,:);
-dlta_tau_4 = tau_msrd(4,:) - tau_SDP{1}(4,:);
-figure
-histogram(dlta_tau_3,'Normalization','pdf')
 
+
+
+return
 
 %% Figure for paper
 close all
@@ -88,21 +91,23 @@ close all
 
 fig = figure;
 fig.Units = 'centimeters';
-fig.InnerPosition = [10, 10, 15, 5]; %[left bottom width height]
+fig.InnerPosition = [10, 10, 18, 5]; %[left bottom width height]
 fig.GraphicsSmoothing = 'on';
 subplot(1,2,1)
 ax = gca;
 ax.TickLabelInterpreter = 'latex';
-plot(vldtnTrjctry.t, tau_msrd(2,:), 'k-')
 hold on
-plot(vldtnTrjctry.t, tau_SDP{1}(2,:), 'r', 'LineWidth',1.5)
-plot(vldtnTrjctry.t, tau_msrd(3,:), 'b-')
-plot(vldtnTrjctry.t, tau_SDP{1}(3,:), 'm-', 'LineWidth',1.5)
 plot(vldtnTrjctry.t, tau_msrd(1,:))
-plot(vldtnTrjctry.t, tau_SDP{1}(1,:), 'LineWidth',1.5)
+plot(vldtnTrjctry.t, tau_SDP{1}(1,:), 'LineWidth',1)
+plot(vldtnTrjctry.t, tau_msrd(2,:), 'k-')
+plot(vldtnTrjctry.t, tau_SDP{1}(2,:), 'r', 'LineWidth',1)
+plot(vldtnTrjctry.t, tau_msrd(3,:), 'b-')
+plot(vldtnTrjctry.t, tau_SDP{1}(3,:), 'm-', 'LineWidth',1)
 xlim([0 20])
 xlabel('$t$, sec', 'interpreter', 'latex')
 ylabel('$\tau_{1-3}$, Nm', 'interpreter', 'latex')
+legend('$\tau_1$','$\hat{\tau}_1$','$\tau_2$','$\hat{\tau}_2$',...
+       '$\tau_3$','$\hat{\tau}_3$','interpreter', 'latex', 'Location','northoutside','NumColumns', 3)
 grid minor
 
 
@@ -115,13 +120,16 @@ ax = gca;
 ax.TickLabelInterpreter = 'latex';
 plot(vldtnTrjctry.t, tau_msrd(4,:), 'k-')
 hold on
-plot(vldtnTrjctry.t, tau_SDP{1}(4,:), 'r', 'LineWidth',1.5)
+plot(vldtnTrjctry.t, tau_SDP{1}(4,:), 'r', 'LineWidth',1)
 plot(vldtnTrjctry.t, tau_msrd(5,:), 'b-')
-plot(vldtnTrjctry.t, tau_SDP{1}(5,:), 'm-', 'LineWidth',1.5)
+plot(vldtnTrjctry.t, tau_SDP{1}(5,:), 'm-', 'LineWidth',1)
 plot(vldtnTrjctry.t, tau_msrd(6,:))
-plot(vldtnTrjctry.t, tau_SDP{1}(6,:), 'LineWidth',1.5)
+plot(vldtnTrjctry.t, tau_SDP{1}(6,:), 'LineWidth',1)
 xlim([0 20])
 xlabel('$t$, sec', 'interpreter', 'latex')
+ylabel('$\tau_{4-6}$, Nm', 'interpreter', 'latex')
+legend('$\tau_4$','$\hat{\tau}_4$','$\tau_5$','$\hat{\tau}_5$',...
+       '$\tau_6$','$\hat{\tau}_6$','interpreter', 'latex','Location','northoutside','NumColumns', 3)
 grid minor
 
 hgexport(fig,'HRI_paper/vldtn')

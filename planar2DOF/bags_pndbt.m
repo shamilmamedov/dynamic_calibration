@@ -5,6 +5,7 @@ clc; clear all;
 % name = 'position_A_1.1_v_0.01.bag';
 % name = 'position_A_0.5_v_1.bag';
 % name = 'ramp_A_1.2_v_1.bag';
+name = 'harmonic_A_0.3927_v_1.bag';
 
 bag = rosbag(name);
 end_time = 20;

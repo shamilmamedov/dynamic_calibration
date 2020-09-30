@@ -38,10 +38,10 @@ clc; clear all; close all;
 % idntfcnTrjctry{10} = parseURData('ur-20_02_12-50sec_12harm.csv', 355, 5090);
 
 idntfcnTrjctry{1} = parseURData('ur-20_02_10-30sec_12harm.csv', 635, 3510);
-% idntfcnTrjctry{2} = parseURData('ur-20_02_19_14harm50sec.csv', 195, 4966);
-% idntfcnTrjctry{2} = parseURData('ur-20_02_12-40sec_12harm.csv', 500, 4460);
-% idntfcnTrjctry{3} = parseURData('ur-20_02_05-20sec_8harm.csv', 320, 2310);
-% idntfcnTrjctry{4} = parseURData('ur-20_02_12-50sec_12harm.csv', 355, 5090);
+% idntfcnTrjctry{1} = parseURData('ur-20_02_19_14harm50sec.csv', 195, 4966);
+% idntfcnTrjctry{1} = parseURData('ur-20_02_12-40sec_12harm.csv', 500, 4460);
+% idntfcnTrjctry{1} = parseURData('ur-20_02_05-20sec_8harm.csv', 320, 2310);
+% idntfcnTrjctry{1} = parseURData('ur-20_02_12-50sec_12harm.csv', 355, 5090);
 
 
 for i = 1:length(idntfcnTrjctry)
@@ -87,8 +87,7 @@ load('driveGains.mat')
 % some comments about drive gains. Overall, identified gains results in
 % better validation, than gains that are given in deLuca's work.
 
-Tau = {}; Wb = {};
-
+Tau = {}; Wb = {}; 
 for i = 1:length(idntfcnTrjctry)
     [Tau{i}, Wb{i}] = buildObservationMatrices(idntfcnTrjctry{i}, baseQR, drvGains);
 end
@@ -105,33 +104,43 @@ end
 
 
 
-return
 %% Saving identified parameters
-pi_full = baseQR.permutationMatrix*[eye(baseQR.numberOfBaseParameters), ...
-                                    -baseQR.beta; ...
-                                    zeros(26,baseQR.numberOfBaseParameters), ... 
-                                    eye(26) ]*[value(pi_b); value(pi_d)];
+% pi_full = baseQR.permutationMatrix*[eye(baseQR.numberOfBaseParameters), ...
+%                                     -baseQR.beta; ...
+%                                     zeros(26,baseQR.numberOfBaseParameters), ... 
+%                                     eye(26) ]*[value(pi_b); value(pi_d)];
 t1 = reshape(pi_full, [11, 6]);
                                
 identifiedUR10E = struct;
-identifiedUR10E.baseParameters = pi_b;
+identifiedUR10E.baseParameters = pib_SDP(:,1);
 identifiedUR10E.standardParameters = pi_full;
-identifiedUR10E.linearFrictionParameters = pi_frctn;
+identifiedUR10E.driveGains = t1(11,:);
+identifiedUR10E.linearFrictionParameters = pifrctn_SDP(:,1);
 
 
-% 
-
-%% Statisitical analysis
+%% Statisitical analysis of the base paramters
 % unbiased estimation of the standard deviation
 sqrd_sgma_e = norm(Tau{1} - Wb{1}*[pib_SDP(:,1); pifrctn_SDP(:,1)], 2)^2/...
                 (size(Wb{1}, 1) - size(Wb{1}, 2));
             
 % the covariance matrix of the estimation error
-Cpi = sqrd_sgma_e*inv(Wb{1}'*Wb{1});
-sgma_pi = sqrt(diag(Cpi));
+C_pi_hat = sqrd_sgma_e*inv(Wb{1}'*Wb{1});
+sgma_pi_hat = sqrt(diag(C_pi_hat));
+
+% Try to compute the variance of the full paramters
+var_pib = diag(C_pi_hat);
+var_pid = zeros(26,1);
+M = baseQR.permutationMatrix*[eye(baseQR.numberOfBaseParameters), ...
+                              -baseQR.beta; ...
+                              zeros(26,baseQR.numberOfBaseParameters), ... 
+                              eye(26)];
+var_pi = M.^2*[var_pib(1:baseQR.numberOfBaseParameters); var_pid];
 
 % relative standard deviation
-sgma_pi_rltv = sgma_pi./abs([pib_SDP(:,1); pifrctn_SDP(:,1)]);
+sgma_pi_rltv = sgma_pi_hat./abs([pib_SDP(:,1); pifrctn_SDP(:,1)])*100;
+
+sgma_frctn = sgma_pi_rltv(baseQR.numberOfBaseParameters+1:end);
+sgma_base = sgma_pi_rltv(1:baseQR.numberOfBaseParameters);
 
 
 %% Functions
@@ -142,14 +151,15 @@ function [Tau, Wb] = buildObservationMatrices(idntfcnTrjctry, baseQR, drvGains)
 
 E1 = baseQR.permutationMatrix(:,1:baseQR.numberOfBaseParameters);
 
-Wb = []; Tau = []; 
+Wb = []; Tau = [];
 for i = 1:1:length(idntfcnTrjctry.t)
-     Yi = regressorWithMotorDynamics(idntfcnTrjctry.q(i,:)',...
+    Yi = regressorWithMotorDynamics(idntfcnTrjctry.q(i,:)',...
                                           idntfcnTrjctry.qd_fltrd(i,:)',...
                                           idntfcnTrjctry.q2d_est(i,:)');
     Yfrctni = frictionRegressor(idntfcnTrjctry.qd_fltrd(i,:)');
     Ybi = [Yi*E1, Yfrctni];
     
+%     W = vertcat(W, [Yi, Yfrctni]);
     Wb = vertcat(Wb, Ybi);
     Tau = vertcat(Tau, diag(drvGains)*idntfcnTrjctry.i_fltrd(i,:)');
 end

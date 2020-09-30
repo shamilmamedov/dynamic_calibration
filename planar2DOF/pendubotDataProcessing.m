@@ -6,6 +6,7 @@ function pendubot = pendubotDataProcessing(file)
 % file = 'position_A_0.3141_v_2.mat';
 % file = 'interp5_1.5.mat';
 % file = 'harmonic_A_0.7854_v_0.5.mat';
+% file = 'position_A_0.3141_v_1.mat';
 
 % load raw data from the robot
 rawData = load(file);
@@ -47,10 +48,10 @@ pendubot.elbw_position_filtered = filtfilt(pstn_fltr, pendubot.elbw_position);
 
 % filter velocties with zero phase filter
 vlcty_fltr_shldr = designfilt('lowpassiir','FilterOrder', 5, ...
-                              'HalfPowerFrequency', 0.1,...
+                              'HalfPowerFrequency', 0.15,...
                               'DesignMethod','butter');
 vlcty_fltr_elbw = designfilt('lowpassiir','FilterOrder', 5, ...
-                             'HalfPowerFrequency', 0.15,...
+                             'HalfPowerFrequency', 0.2,...
                              'DesignMethod','butter');
 
 pendubot.shldr_velocity_filtered = filtfilt(vlcty_fltr_shldr, pendubot.shldr_velocity);
@@ -70,16 +71,29 @@ pendubot.shldr_acceleration = q2d1;
 pendubot.elbow_acceleration = q2d2;
 
 
+% estimating accelerations based on velocities
+q2d1 = zeros(size(pendubot.shldr_velocity));
+q2d2 = zeros(size(pendubot.elbw_velocity));
+for i = 2:size(pendubot.shldr_velocity,1)-1
+    q2d1(i) = (pendubot.shldr_velocity(i+1) - pendubot.shldr_velocity(i-1))/...
+                (pendubot.time(i+1) - pendubot.time(i-1));
+    q2d2(i) = (pendubot.elbw_velocity(i+1) - pendubot.elbw_velocity(i-1))/...
+                (pendubot.time(i+1) - pendubot.time(i-1));
+end
+pendubot.shldr_acceleration2 = q2d1;
+pendubot.elbow_acceleration2 = q2d2;
+
+
 % filter estimated accelerations with zero phase filter
 aclrtn_fltr = designfilt('lowpassiir','FilterOrder', 5, ...
-                        'HalfPowerFrequency', 0.2, 'DesignMethod','butter');
+                        'HalfPowerFrequency', 0.25, 'DesignMethod','butter');
 pendubot.shldr_acceleration_filtered = filtfilt(aclrtn_fltr, pendubot.shldr_acceleration);
 pendubot.elbow_acceleration_filtered = filtfilt(aclrtn_fltr, pendubot.elbow_acceleration);
 
 
 % filter torque measurements using zero phase filter
 trq_fltr = designfilt('lowpassiir','FilterOrder', 5, ...
-                       'HalfPowerFrequency', 0.1,'DesignMethod','butter');
+                       'HalfPowerFrequency', 0.15,'DesignMethod','butter');
 pendubot.torque_filtered = filtfilt(trq_fltr, pendubot.torque);
 
 
@@ -99,6 +113,7 @@ hold on
 plot(pendubot.time, pendubot.torque)
 plot(pendubot.time, pendubot.torque_filtered, 'LineWidth', 1.5)
 plot(pendubot.time, pendubot.current*0.123)
+xlim([0 2.5])
 xlabel('$t$, sec','interpreter', 'latex')
 ylabel('$\tau$, Nm', 'interpreter', 'latex');
 legend('torque measured', 'torque filtered', 'current * k')
@@ -111,6 +126,7 @@ subplot(2,1,1)
     plot(pendubot.time, pendubot.shldr_position)
     hold on
     plot(pendubot.time, pendubot.shldr_position_filtered)
+    xlim([0 2.5])
     xlabel('$t$, sec','interpreter', 'latex')
     ylabel('$q_1$, rad','interpreter', 'latex')
     grid on
@@ -119,6 +135,7 @@ subplot(2,1,2)
     plot(pendubot.time, pendubot.elbw_position)
     hold on
     plot(pendubot.time, pendubot.elbw_position_filtered)
+    xlim([0 2.5])
     xlabel('$t$, sec','interpreter', 'latex')
     ylabel('$q_2$, rad','interpreter', 'latex')
     grid on
@@ -131,6 +148,7 @@ subplot(2,1,1)
     plot(pendubot.time, pendubot.shldr_velocity)
     hold on
     plot(pendubot.time, pendubot.shldr_velocity_filtered)
+    xlim([0 2.5])
     xlabel('$t$, sec','interpreter', 'latex')
     ylabel('$\dot{q}_1$, rad/s','interpreter', 'latex')
     legend('measured', 'filtered')
@@ -139,6 +157,7 @@ subplot(2,1,2)
     plot(pendubot.time, pendubot.elbw_velocity)
     hold on
     plot(pendubot.time, pendubot.elbw_velocity_filtered)
+    xlim([0 2.5])
     xlabel('t, sec','interpreter', 'latex')
     ylabel('$\dot{q}_2$, rad/s','interpreter', 'latex')
     legend('measured', 'filtered')
@@ -151,6 +170,8 @@ subplot(2,1,1)
     plot(pendubot.time, pendubot.shldr_acceleration)
     hold on
     plot(pendubot.time, pendubot.shldr_acceleration_filtered)
+    plot(pendubot.time, pendubot.shldr_acceleration2)
+    xlim([0 2.5])
 %     plot(pendubot.time, pendubot.shldr_acceleration_filtered2)
 %     xlim([0 2])
     xlabel('$t$, sec','interpreter', 'latex')
@@ -161,6 +182,8 @@ subplot(2,1,2)
     plot(pendubot.time, pendubot.elbow_acceleration)
     hold on
     plot(pendubot.time, pendubot.elbow_acceleration_filtered)
+    plot(pendubot.time, pendubot.elbow_acceleration2)
+    xlim([0 2.5])
 %     plot(pendubot.time, pendubot.elbow_acceleration_filtered2)
 %     xlim([0 2])
     xlabel('$t$, sec','interpreter', 'latex')

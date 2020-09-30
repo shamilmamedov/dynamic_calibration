@@ -35,8 +35,8 @@ pi_stnd = {}; pi_frctn = {};
 
 return
 %%
-pi_rgd_1 = pi_stnd(1:10);
-pi_rgd_2 = pi_stnd(12:end);
+pi_rgd_1 = pi_stnd{1}(1:10);
+pi_rgd_2 = pi_stnd{1}(12:end);
 
 m1 = pi_rgd_1(10);
 com1 = pi_rgd_1(7:9)/m1;
@@ -59,8 +59,8 @@ function [pi_stnd, pi_frctn] = OLS_SDP(Tau, W, pndbtBaseQR, plnr)
     % Then it is possible to assign realizability of the first and second
     % moments on the ellipsoid. For that more or less accurate CAD parameter
     % required.
-    physicalConsistency = 0; % if 1 phsycal, if 0 then semiphysical
-    firstMomentRealizability = 0; % DOESN"T WORK FOR NOW!!!!!!!!!
+    physicalConsistency = 1; % if 1 phsycal, if 0 then semiphysical
+    firstMomentRealizability = 1; % DOESN"T WORK FOR NOW!!!!!!!!!
     secondMomentRealizability = 0;
 
     pi_frctn = sdpvar(6,1);
@@ -88,18 +88,19 @@ function [pi_stnd, pi_frctn] = OLS_SDP(Tau, W, pndbtBaseQR, plnr)
 
 
     % Density realizability of the second momentum (in an ellipsoid)
-    Sigma_c_1 = 0.5*trace(plnr.I(:,:,1))*eye(3) - plnr.I(:,:,1); % density weighted covariance
+    sclng = 1.8;
+    Sigma_c_1 = 0.5*trace(sclng*plnr.I(:,:,1))*eye(3) - sclng*plnr.I(:,:,1); % density weighted covariance
     Epsilon_pi_1 = inv(Sigma_c_1/plnr.m(1)); % covariance ellipsoid
     Q(:,:,1) = blkdiag(-Epsilon_pi_1, 1);
 
-    Sigma_c_2 = 0.5*trace(plnr.I(:,:,2))*eye(3) - plnr.I(:,:,2); % density weighted covariance
+    Sigma_c_2 = 0.5*trace(sclng*plnr.I(:,:,2))*eye(3) - sclng*plnr.I(:,:,2); % density weighted covariance
     Epsilon_pi_2 = inv(Sigma_c_2/plnr.m(2)); % covariance ellipsoid
     Q(:,:,2) = blkdiag(-Epsilon_pi_2, 1);
 
     pi_CAD = [plnr.pi(:,1); 0; plnr.pi(:,2)]; % parameters from the CAD
     w_pi = 1e-6; % regulization term
 
-    cnstr = [pii(10) < 3., pii(21) < 1.]; % constraints on the mass
+    cnstr = [pii(10) < 2., pii(21) < 1.]; % constraints on the mass
 
 
     k = 1; % iterates over rigid bodies

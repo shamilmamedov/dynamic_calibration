@@ -1,7 +1,7 @@
 function plnr_visualize(q, plnr)
 
 figure
-for j = 1:5:length(q)
+for j = 1:20:length(q)
     clf
     qj = q(j,:);
 
@@ -32,8 +32,8 @@ for j = 1:5:length(q)
     % scatter(Tee0(1,3), Tee0(2,3))
     line([T_0k(1,4,2) T_0k(1,4,3)], [T_0k(3,4,2), T_0k(3,4,3)],'Color','k','LineWidth',1.5)
     line([T_0k(1,4,3) T_0ee(1,4)], [T_0k(3,4,3), T_0ee(3,4)],'Color','k','LineWidth',1.5)
-    xlim([-0.5 0.5])
-    ylim([-0.6 0.2])
+    xlim([-0.6 0.6])
+    ylim([-0.6 0.6])
 
     pause(1e-1)
 end

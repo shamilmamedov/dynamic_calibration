@@ -4,9 +4,13 @@ function [Tau, Wb, W] = computeObservationMatricesForPendubot(pendubot, fullRegr
     W = []; Wb = []; Tau = [];
     for i = 1:1:noObservations
         % generalized positions velocities and accelerations
-        qi = [pendubot.shldr_position_filtered(i), pendubot.elbw_position_filtered(i)]';
-        qdi = [pendubot.shldr_velocity_filtered(i), pendubot.elbw_velocity_filtered(i)]';
-        q2di = [pendubot.shldr_acceleration_filtered(i), pendubot.elbow_acceleration_filtered(i)]';
+        qi = [pendubot.shldr_position(i), pendubot.elbw_position(i)]';
+        qdi = [pendubot.shldr_velocity(i), pendubot.elbw_velocity(i)]';
+        q2di = [pendubot.shldr_acceleration(i), pendubot.elbow_acceleration(i)]';
+        
+%         qi = [pendubot.shldr_position_filtered(i), pendubot.elbw_position_filtered(i)]';
+%         qdi = [pendubot.shldr_velocity_filtered(i), pendubot.elbw_velocity_filtered(i)]';
+%         q2di = [pendubot.shldr_acceleration_filtered(i), pendubot.elbow_acceleration_filtered(i)]';
 
         % regressor
         Yi = regressorWithMotorDynamicsPndbt(qi, qdi, q2di);

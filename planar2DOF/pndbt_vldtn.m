@@ -17,7 +17,7 @@ pi_CAD = [plnr.pi(:,1); 0; plnr.pi(:,2)];
 
 % based on generalized positions, velocities and accelerations and using
 % regressor form predict torques
-vldtnRange = 1:500;%size(vldtnData.time,1);
+vldtnRange = 1:1000;%size(vldtnData.time,1);
 tau_prdctd_CAD = {}; tau_prdctd_SDP = {};
 for i = 1:3
     [vldtnData{i}.tau_prdctd_CAD, vldtnData{i}.tau_prdctd_SDP{1}] = ...
@@ -87,9 +87,14 @@ grid on
 function [tau_prdctd_CAD, tau_prdctd_SDP] = dynamicParametrsValidationForPendubot(vldtnData, vldtnRange, pi_CAD, pi_hat_SDP)
     tau_prdctd_SDP = []; tau_prdctd_CAD = [];
     for i = vldtnRange
-        qi = [vldtnData.shldr_position_filtered(i), vldtnData.elbw_position_filtered(i)]';
-        qdi = [vldtnData.shldr_velocity_filtered(i), vldtnData.elbw_velocity_filtered(i)]';
-        q2di = [vldtnData.shldr_acceleration_filtered(i), vldtnData.elbow_acceleration_filtered(i)]';
+        qi = [vldtnData.shldr_position(i), vldtnData.elbw_position(i)]';
+        qdi = [vldtnData.shldr_velocity(i), vldtnData.elbw_velocity(i)]';
+        q2di = [vldtnData.shldr_acceleration(i), vldtnData.elbow_acceleration(i)]';
+
+        
+%         qi = [vldtnData.shldr_position_filtered(i), vldtnData.elbw_position_filtered(i)]';
+%         qdi = [vldtnData.shldr_velocity_filtered(i), vldtnData.elbw_velocity_filtered(i)]';
+%         q2di = [vldtnData.shldr_acceleration_filtered(i), vldtnData.elbow_acceleration_filtered(i)]';
 
         Yi = regressorWithMotorDynamicsPndbt(qi, qdi, q2di);
         Yfrctni = frictionRegressor(qdi);
