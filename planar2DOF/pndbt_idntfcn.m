@@ -6,32 +6,36 @@ plnr = parse_urdf('planar_manip.urdf');
 % load and process data
 % pendubot = pendubotDataProcessing('step_A_1.57.mat');
 % pendubot = pendubotDataProcessing('interp5_2.mat');
-pendubot = pendubotDataProcessing('harmonic_A_0.7854_v_0.25.mat');
+% pendubot = pendubotDataProcessing('harmonic_A_0.7854_v_0.25.mat');
+% pendubot = pendubotDataProcessing('harmonic_A_0.3927_v_1.mat');
 
-idntfcnData = {};
-idntfcnData{1} = pendubotDataProcessing('harmonic_A_0.7854_v_0.5.mat');
-idntfcnData{2} = pendubotDataProcessing('step_A_1.57.mat');
-idntfcnData{3} = pendubotDataProcessing('interp5_0.5.mat');
+% idntfcnData = {};
+% idntfcnData{1} = pendubotDataProcessing('harmonic_A_0.7854_v_0.5.mat');
+% idntfcnData{2} = pendubotDataProcessing('step_A_1.57.mat');
+% idntfcnData{3} = pendubotDataProcessing('interp5_0.5.mat');
+idntfcnData = pendubotDataProcessing('harmonic_A_0.3927_v_1.mat');
+
 
 % load mapping from standard parameters to base parameters
 load('pndbtBaseQR.mat')
 fullRegressor2BaseRegressor = pndbtBaseQR.permutationMatrix(:, ...
                                     1:pndbtBaseQR.numberOfBaseParameters);
 
-Tau = {}; W = {};
-[Tau{1}, ~, W{1}] = computeObservationMatricesForPendubot(idntfcnData{1}, fullRegressor2BaseRegressor);
-[Tau{2}, ~, W{2}] = computeObservationMatricesForPendubot(idntfcnData{2}, fullRegressor2BaseRegressor);
-[Tau{3}, ~, W{3}] = computeObservationMatricesForPendubot(idntfcnData{3}, fullRegressor2BaseRegressor);
+% Tau = {}; W = {};
+% [Tau{1}, ~, W{1}] = computeObservationMatricesForPendubot(idntfcnData{1}, fullRegressor2BaseRegressor);
+% [Tau{2}, ~, W{2}] = computeObservationMatricesForPendubot(idntfcnData{2}, fullRegressor2BaseRegressor);
+% [Tau{3}, ~, W{3}] = computeObservationMatricesForPendubot(idntfcnData{3}, fullRegressor2BaseRegressor);
+[Tau, ~, W] = computeObservationMatricesForPendubot(idntfcnData, fullRegressor2BaseRegressor);
 
 % % Ordinary Least Squares Approach
 % pi_hat_OLS = (Wb'*Wb)\(Wb'*Tau);
 
 % Set-up SDP optimization procedure
-pi_stnd = {}; pi_frctn = {};
-[pi_stnd{1}, pi_frctn{1}] = OLS_SDP(Tau{1}, W{1}, pndbtBaseQR, plnr);
-[pi_stnd{2}, pi_frctn{2}] = OLS_SDP(Tau{2}, W{2}, pndbtBaseQR, plnr);
-[pi_stnd{3}, pi_frctn{3}] = OLS_SDP(Tau{3}, W{3}, pndbtBaseQR, plnr);
-
+% pi_stnd = {}; pi_frctn = {};
+% [pi_stnd{1}, pi_frctn{1}] = OLS_SDP(Tau{1}, W{1}, pndbtBaseQR, plnr);
+% [pi_stnd{2}, pi_frctn{2}] = OLS_SDP(Tau{2}, W{2}, pndbtBaseQR, plnr);
+% [pi_stnd{3}, pi_frctn{3}] = OLS_SDP(Tau{3}, W{3}, pndbtBaseQR, plnr);
+[pi_stnd, pi_frctn] = OLS_SDP(Tau, W, pndbtBaseQR, plnr);
 
 return
 %%

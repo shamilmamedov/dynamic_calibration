@@ -104,12 +104,21 @@ plot(vldtnTrjctry.t, tau_SDP{1}(2,:), 'r', 'LineWidth',1)
 plot(vldtnTrjctry.t, tau_msrd(3,:), 'b-')
 plot(vldtnTrjctry.t, tau_SDP{1}(3,:), 'm-', 'LineWidth',1)
 xlim([0 20])
-xlabel('$t$, sec', 'interpreter', 'latex')
-ylabel('$\tau_{1-3}$, Nm', 'interpreter', 'latex')
+xlabel('$t$, sec', 'interpreter', 'latex', 'Fontname', 'Times', 'FontSize', 9)
+ylabel('$\tau_{1-3}$, Nm', 'interpreter', 'latex', 'Fontname', 'Times', 'FontSize', 9)
 legend('$\tau_1$','$\hat{\tau}_1$','$\tau_2$','$\hat{\tau}_2$',...
-       '$\tau_3$','$\hat{\tau}_3$','interpreter', 'latex', 'Location','northoutside','NumColumns', 3)
+       '$\tau_3$','$\hat{\tau}_3$','interpreter', 'latex', ...
+       'Location','southwest','NumColumns', 3, 'Fontname', 'Times', 'FontSize', 9)
 grid minor
+ylim([-250 200])
 
+ax = gca;
+ax.FontUnits = 'points';
+ax.FontWeight = 'normal';
+ax.FontSize = 9;
+ax.FontName = 'Times';
+ax.TickLabelInterpreter = 'latex';
+box off
 
 % fig = figure;
 % fig.Units = 'centimeters';
@@ -126,13 +135,24 @@ plot(vldtnTrjctry.t, tau_SDP{1}(5,:), 'm-', 'LineWidth',1)
 plot(vldtnTrjctry.t, tau_msrd(6,:))
 plot(vldtnTrjctry.t, tau_SDP{1}(6,:), 'LineWidth',1)
 xlim([0 20])
-xlabel('$t$, sec', 'interpreter', 'latex')
-ylabel('$\tau_{4-6}$, Nm', 'interpreter', 'latex')
+xlabel('$t$, sec', 'interpreter', 'latex', 'Fontname', 'Times', 'FontSize', 9)
+ylabel('$\tau_{4-6}$, Nm', 'interpreter', 'latex', 'Fontname', 'Times', 'FontSize', 9)
 legend('$\tau_4$','$\hat{\tau}_4$','$\tau_5$','$\hat{\tau}_5$',...
-       '$\tau_6$','$\hat{\tau}_6$','interpreter', 'latex','Location','northoutside','NumColumns', 3)
+       '$\tau_6$','$\hat{\tau}_6$','interpreter', 'latex',...
+       'Location','southwest','NumColumns', 3, 'Fontname', 'Times', 'FontSize', 9)
 grid minor
+ylim([-16 10])
 
-hgexport(fig,'HRI_paper/vldtn')
+ax = gca;
+ax.FontUnits = 'points';
+ax.FontWeight = 'normal';
+ax.FontSize = 9;
+ax.FontName = 'Times';
+ax.TickLabelInterpreter = 'latex';
+box off
+
+% hgexport(fig,'HRI_paper/vldtn')
+% print -djpeg HRI_paper/vldtn.jpeg
 
 return
 figure

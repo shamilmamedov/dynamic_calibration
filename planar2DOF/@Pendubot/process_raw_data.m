@@ -1,22 +1,11 @@
-function pendubot = pendubotDataProcessing(file)
+function data = process_raw_data(path_to_file)
 
 % load raw data from the robot
-rawData = load(file);
+rawData = load(path_to_file);
 
 % there is some issue with synchronizing ROS data because three point
 % numerical differentiation explodes. That is why first I remove some data
 % points in order to avoid it.
-% rowsToDelete = find(diff(rawData.data(:,1))<1e-3) + 1;
-% rawData.data(rowsToDelete,:) = [];
-
-
-% stupid way to remove an issue with elbow velocity
-% dlta_vel_max = 5;
-% while ~isempty(find(abs(diff(rawData.data(:,5))) > dlta_vel_max, 1))
-%     rowsToDelete = find(abs(diff(rawData.data(:,5))) > dlta_vel_max, 1) + 1;
-%     rawData.data(rowsToDelete,:) = [];
-% end
-% 
 % rowsToDelete = find(diff(rawData.data(:,1))<1e-3) + 1;
 % rawData.data(rowsToDelete,:) = [];
 
@@ -29,6 +18,7 @@ pendubot.shldr_position = rawData.data(:,4);
 pendubot.elbw_position = rawData.data(:,5);
 pendubot.shldr_velocity = rawData.data(:,6);
 pendubot.elbw_velocity = rawData.data(:,7);
+
 
 % filter position to get rid of errors
 pstn_fltr = designfilt('lowpassiir','FilterOrder', 5, ...
@@ -183,5 +173,6 @@ subplot(2,1,2)
     legend('estimate', 'filetered estimate')
     grid on
 end
+
 
 end
