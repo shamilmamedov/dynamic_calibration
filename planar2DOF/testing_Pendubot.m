@@ -213,7 +213,7 @@ function test_identification(path_to_urdf)
     kp = 10;
     kd = 1;
 
-    % simultion
+    % simultion for identification
     t = 0:1e-2:5;
     x0 = [-pi/2, 0, 0, 0]';
     x_sim = x0;
@@ -248,6 +248,8 @@ function test_identification(path_to_urdf)
                                                           q_dot(:,2:end-1), ...
                                                           q_2dot(:,2:end-1));
     pi_real = robot.get_dynamic_parameters_from_urdf('base');
+    
+    % Printing results of identification
     fprintf('\t parameter \t real \t\t identified OLS \n');
     for k = 1:6
         fprintf('\t %8s \t %8d \t %8d \n', strcat('rgb', num2str(k)), pi_real(k), pi_rgb_hat(k));
@@ -257,4 +259,46 @@ function test_identification(path_to_urdf)
         fprintf('\t %8s \t %8d \t %8d \n', strcat('frcn', num2str(k)), 0, pi_frcn_hat(k));
     end
 
+    % -------------------------------------------------------------
+    % specify a trajectory to follow by the first joint and its parameters
+    q_ref = @(t, q0, a) q0 + a(1)*sin(t) + a(2)*sin(2*t) + a(3)*sin(3*t) + ...
+                            a(4)*sin(4*t) + a(5)*sin(5*t) + a(6)*sin(6*t);
+    a_valid = rand(6,1);
+    % simultion for validation
+    t = 0:1e-2:10;
+    x0 = [-pi/2, 0, 0, 0]';
+    x_sim = x0;
+    tau = [];
+    for i = 1:length(t)-1
+        % compute control signal
+        u = kp*(q_ref(t(i), q0, a_valid) - x_sim(1,i)) - kd*x_sim(3,i);
+        tau = vertcat(tau, u);
+
+        % simulate
+        [~, x] = ode45(@(t,x) robot.ode(x,u), [t(i) t(i+1)], x_sim(:,i));
+        x_sim = horzcat(x_sim, x(end,:)');
+    end
+    q = x_sim(1:2,:);
+    q_dot = x_sim(3:4,:);
+    
+    %estimate accelerations using central difference
+    q_2dot = zeros(size(q_dot));
+    for k = 2:size(q_dot,2)-1
+        delta_qdot = q_dot(:,k+1) - q_dot(:,k-1);
+        delta_t = t(k+1) - t(k-1);
+        q_2dot(:,k) = delta_qdot./delta_t;
+    end
+    
+    Wb = robot.get_rigid_body_observation_matrix(q(:,2:end-1), q_dot(:,2:end-1), q_2dot(:,2:end-1), 'base');
+    Wf = robot.get_friction_observation_matrix(q_dot(:,2:end-1), 'continuous');
+    T_hat = Wb*pi_rgb_hat + Wf*pi_frcn_hat;
+    
+    figure
+    plot(t(2:end-1), tau(1:end-1), 'LineWidth', 1.5)
+    hold on
+    plot(t(2:end-1), T_hat(1:2:end), 'LineWidth', 1.5)
+    title('validation', 'FontName', 'Times', 'FontSize', 13, 'Interpreter', 'latex');
+    legend('$\tau$', '$\hat{\tau}$', 'FontName', 'Times', 'FontSize', 13, 'Interpreter', 'latex');
+    xlabel('t (sec)', 'FontName', 'Times', 'FontSize', 13, 'Interpreter', 'latex')
+    grid on
 end

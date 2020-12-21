@@ -22,7 +22,7 @@ path_to_csv = 'data1.csv';
 [pi_rgb_hat, pi_frcn_hat] = robot.identify_parameters(tau(3:end-2), q(3:end-2,:)', ...
                                                       q_dot(3:end-2,:)', q_2dot(3:end-2,:)');
 
-
+                                                  
 %% Validation
 
 % choose file with experimental data
@@ -55,10 +55,16 @@ plot(t(3:end-2), tau(3:end-2), 'LineWidth', 1.5)
 hold on
 plot(t(3:end-2), T_hat_CAD(1:2:end))
 plot(t(3:end-2), T_hat_OLS(1:2:end))
-legend('$\tau$ measured', '$\tau$ predicted CAD', 'Interpreter', 'latex', 'FontSize', 13) 
+legend('$\tau$ measured', '$\tau$ predicted CAD', '$\tau$ predicted OLS', ...
+    'Interpreter', 'latex', 'FontSize', 13) 
+title('Torque prediction')
 grid on
 subplot(2,1,2)
 plot(t(3:end-2), tau(3:end-2) - T_hat_CAD(1:2:end), 'LineWidth', 1.5)
+hold on
+plot(t(3:end-2), tau(3:end-2) - T_hat_OLS(1:2:end), 'LineWidth', 1.5)
+legend('$\Delta \tau$ CAD', '$\Delta \tau$ OLS', ...
+    'Interpreter', 'latex', 'FontSize', 13) 
 title('Prediction error')
 grid on       
 
