@@ -9,44 +9,32 @@ robot = Pendubot(path_to_urdf);
 %% Identification
 
 % choose file with experimental data
-path_to_csv = 'data2.csv';
-
-% parse data
-[t,q,tau] = parse_data(path_to_csv);
-
-% estimate velocities and acceleration
-[tau, q_dot, q_2dot] = process_data(t, q, tau, 0.4);
-
-% plot_data(t(3:end-2), q(3:end-2,:), q_dot(3:end-2,:), q_2dot(3:end-2,:), tau(3:end-2))
-
-[pi_rgb_hat, pi_frcn_hat] = robot.identify_parameters(tau(3:end-2), q(3:end-2,:)', ...
-                                                      q_dot(3:end-2,:)', q_2dot(3:end-2,:)');
-
-                                                  
-%% Identification on old data
-% % idntfcnData = pendubotDataProcessing('harmonic_A_0.3927_v_1.mat');
-% idntfcnData = pendubotDataProcessing('harmonic_A_0.7854_v_0.5.mat');
-% 
-% t = idntfcnData.time;
-% q = [idntfcnData.shldr_position, idntfcnData.elbw_position]';
-% q_dot = [idntfcnData.shldr_velocity_filtered, idntfcnData.elbw_velocity_filtered]';
-% q_2dot = [idntfcnData.shldr_acceleration_filtered, idntfcnData.elbow_acceleration_filtered]';
-% tau = idntfcnData.torque_filtered;
-% 
-% [pi_rgb_hat, pi_frcn_hat] = robot.identify_parameters(tau, q, ...
-%                                                       q_dot, q_2dot)
-
-
-%% Validation
-
-% choose file with experimental data
 path_to_csv = 'data1.csv';
 
 % parse data
 [t,q,tau] = parse_data(path_to_csv);
 
 % estimate velocities and acceleration
-[tau, q_dot, q_2dot] = process_data(t, q, tau, 0.8);
+[tau, q_dot, q_2dot] = process_data(t, q, tau, 0.2);
+
+% plot_data(t(3:end-2), q(3:end-2,:), q_dot(3:end-2,:), q_2dot(3:end-2,:), tau(3:end-2))
+
+[pi_rgb_hat, pi_frcn_hat] = robot.identify_parameters(tau(3:end-2), q(3:end-2,:)', ...
+                                                      q_dot(3:end-2,:)', q_2dot(3:end-2,:)');
+                                                  
+%% Identific
+
+                                                  
+%% Validation
+
+% choose file with experimental data
+path_to_csv = 'data2.csv';
+
+% parse data
+[t,q,tau] = parse_data(path_to_csv);
+
+% estimate velocities and acceleration
+[tau, q_dot, q_2dot] = process_data(t, q, tau, 0.5);
 
 
 % ---------------------------------------------------------------
@@ -57,7 +45,7 @@ Ws = robot.get_rigid_body_observation_matrix(q(3:end-2,:)', q_dot(3:end-2,:)',..
                                              q_2dot(3:end-2,:)', 'standard');
 Wb = robot.get_rigid_body_observation_matrix(q(3:end-2,:)', q_dot(3:end-2,:)',...
                                              q_2dot(3:end-2,:)', 'base');
-Wf = robot.get_friction_observation_matrix(q_dot(3:end-2,:)', 'continuous');
+Wf = robot.get_friction_observation_matrix(q_dot(3:end-2,:)', 'discontinuous');
 
 % prediction by CAD
 T_hat_CAD = Ws*robot.get_dynamic_parameters_from_urdf('standard');

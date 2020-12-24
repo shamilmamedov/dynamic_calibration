@@ -13,8 +13,8 @@ classdef Pendubot
        generate_dynamics_functions(obj);
        generate_rigid_body_regressor_function(obj);
        get_base_parameters(obj);
-       animate_motion(obj, q);
        pi_b = get_symbolic_base_parameters(obj);
+       
        [pi_rgb_hat, pi_frcn_hat] = identify_parameters(obj, tau, q, q_dot, q_2dot);
        
        function pi = get_dynamic_parameters_from_urdf(obj, type)
@@ -87,8 +87,6 @@ classdef Pendubot
                beta = 100;
                Yf = [q_dot(1), tanh(beta*q_dot(1)), 0, 0;
                         0, 0, q_dot(2), tanh(beta*q_dot(2))];
-%                Yf = [q_dot(1), tanh(beta*q_dot(1)), 1, 0, 0, 0;
-%                        0, 0, 0, q_dot(2), tanh(beta*q_dot(2)), 1];
            elseif strcmp(type, 'discontinuous')
                 Yf = [q_dot(1), sign(q_dot(1)), 0, 0;
                         0, 0, q_dot(2), sign(q_dot(2))];
