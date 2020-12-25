@@ -14,6 +14,7 @@ classdef Pendubot
        generate_rigid_body_regressor_function(obj);
        get_base_parameters(obj);
        animate_motion(obj, q);
+       visualize_configurations(obj, q)
        pi_b = get_symbolic_base_parameters(obj);
        [pi_rgb_hat, pi_frcn_hat] = identify_parameters(obj, tau, q, q_dot, q_2dot);
        

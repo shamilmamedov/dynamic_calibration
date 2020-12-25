@@ -1,5 +1,9 @@
 clc; clear all; close all;
 
+
+exp_data_files = {'data1.csv', 'data2.csv', 'data3.csv', ...
+                'data_06.csv', 'data_08.csv', 'data_10.csv'};
+
 %% Creating pendubot instance
 path_to_urdf = 'planar_manip.urdf';
 
@@ -8,21 +12,25 @@ robot = Pendubot(path_to_urdf);
 
 %% Identification
 
+
 % choose file with experimental data
-path_to_csv = 'data2.csv';
+path_to_csv = exp_data_files{6};
 
 % parse data
 [t,q,tau] = parse_data(path_to_csv);
 
 % estimate velocities and acceleration
-[tau, q_dot, q_2dot] = process_data(t, q, tau, 0.4);
+[tau, q_dot, q_2dot] = process_data(t, q, tau, 0.2);
 
 % plot_data(t(3:end-2), q(3:end-2,:), q_dot(3:end-2,:), q_2dot(3:end-2,:), tau(3:end-2))
 
 [pi_rgb_hat, pi_frcn_hat] = robot.identify_parameters(tau(3:end-2), q(3:end-2,:)', ...
                                                       q_dot(3:end-2,:)', q_2dot(3:end-2,:)');
 
-                                                  
+% robot.animate_motion(q(1:5:end,:)')
+robot.visualize_configurations([-pi/2;0])
+
+                                                 
 %% Identification on old data
 % % idntfcnData = pendubotDataProcessing('harmonic_A_0.3927_v_1.mat');
 % idntfcnData = pendubotDataProcessing('harmonic_A_0.7854_v_0.5.mat');
@@ -40,7 +48,7 @@ path_to_csv = 'data2.csv';
 %% Validation
 
 % choose file with experimental data
-path_to_csv = 'data1.csv';
+path_to_csv = exp_data_files{5};
 
 % parse data
 [t,q,tau] = parse_data(path_to_csv);
@@ -73,6 +81,7 @@ plot(t(3:end-2), T_hat_OLS(1:2:end))
 legend('$\tau$ measured', '$\tau$ predicted CAD', '$\tau$ predicted OLS', ...
     'Interpreter', 'latex', 'FontSize', 13) 
 title('Torque prediction')
+xlim([0 4])
 grid on
 subplot(2,1,2)
 plot(t(3:end-2), tau(3:end-2) - T_hat_CAD(1:2:end), 'LineWidth', 1.5)
@@ -81,6 +90,7 @@ plot(t(3:end-2), tau(3:end-2) - T_hat_OLS(1:2:end), 'LineWidth', 1.5)
 legend('$\Delta \tau$ CAD', '$\Delta \tau$ OLS', ...
     'Interpreter', 'latex', 'FontSize', 13) 
 title('Prediction error')
+xlim([0 4])
 grid on       
 
 
