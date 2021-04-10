@@ -1,6 +1,19 @@
 % ----------------------------------------------------------------------
 % In this script QR decomposition is applied to regressor in closed
 % form obtained from Lagrange formulation of dynamics.
+%
+% You should already have a function to compute the regressor matrix of the
+% robot full_regressor_UR10E.m 
+%
+% In the beginning you need to choose if you want to include motor dynamics
+% (reflected inertia of the motor). A rule of thumb is to include it.
+% 
+% After finding base parametrs the test is performed which compares the
+% output torques with base and full parameters for randomly generated data.
+% 
+% Finally, a structure is generated and saved with parameters necessary to 
+% find base  parameters from standard ones, and base regressor from a
+% strandard one.
 % ----------------------------------------------------------------------
 % Get robot description
 run('main_ur.m')

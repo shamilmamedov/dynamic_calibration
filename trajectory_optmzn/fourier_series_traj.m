@@ -13,11 +13,11 @@ function [q,qd,q2d] = fourier_series_traj(t,q0,A,B,w,N)
 %   qd - velocities i.e. derivative of polynomail
 %   q2d - accelerations i.e. second derivative of polynomial
 % -----------------------------------------------------------------------
-    q = q0;
-    qd = zeros(size(q0));
-    q2d = zeros(size(q0));
-    for k = 1:N
-       q = q + A(:,k)/(w*k).*sin(w*k*t) - B(:,k)/(w*k).*cos(w*k*t);
-       qd = qd + A(:,k).*cos(w*k*t) + B(:,k)*sin(w*k*t);
-       q2d = q2d - A(:,k)*w*k.*sin(w*k*t) + B(:,k)*w*k*cos(w*k*t);
-    end
+q = q0;
+qd = zeros(size(q0));
+q2d = zeros(size(q0));
+for k = 1:N
+   q = q + A(:,k)/(w*k).*sin(w*k*t) - B(:,k)/(w*k).*cos(w*k*t);
+   qd = qd + A(:,k).*cos(w*k*t) + B(:,k)*sin(w*k*t);
+   q2d = q2d - A(:,k)*w*k.*sin(w*k*t) + B(:,k)*w*k*cos(w*k*t);
+end
