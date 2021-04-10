@@ -3,7 +3,8 @@ function data = filterData(data)
 % The function filters UR10E data for identification purposes.
 % It filters generilized velocities and current, as well as estimates
 % acceleration based on velocities by means of numerical differentiation
-% with central difference scheme
+% with central difference scheme. The function also plots filtered data
+% against unfileterd for visual inspection of the quality of filtering
 % Input:
 %   data - structure which has data.t, data.q, data.qd, data.i
 % Ouput:

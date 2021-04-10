@@ -12,6 +12,8 @@ function out = parseURData(file, int_idx, fnl_idx)
 %   out.q - generilized positions of the joints
 %   out.qd - generilized velocities of the joints
 %   out.i - motor current of each joint motor
+%   out.i_des - desired current of each joint motor
+%   out.tau_des - desired torque of each joint motor
 % ----------------------------------------------------------------------
 traj = load(file);
 

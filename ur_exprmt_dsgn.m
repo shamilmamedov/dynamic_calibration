@@ -1,6 +1,15 @@
 % ---------------------------------------------------------------------
 % In this script trajectory optimization otherwise called experiment
 % design for dynamic paramters identification is carried out. 
+% 
+% First, specify cost function (traj_cost_lgr) and constraints 
+% (traj_cnstr) for the optimziation. Then choose oprimization algorithm and
+% specify trajectory parameters (duration, fundamental frequency, number of 
+% harmonics, initial (= final) positionin) and max/min positions,
+% velocities and accelerations.
+% 
+% Then script runs optimization, plots obtained trajectory and saves its
+% parameters into a file.
 % ---------------------------------------------------------------------
 run('main_ur.m'); % get robot description
 

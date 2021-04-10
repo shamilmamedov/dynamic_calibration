@@ -1,8 +1,10 @@
 function [c,ceq] = traj_cnstr(opt_vars, traj_par)
-% --------------------------------------------------------------------
+% -------------------------------------------------------------------------
 % The function computes constraints on trajectory for trajectoty
 % optimization needed for dynamic parameter identification
-% -------------------------------------------------------------------
+% 
+% Constraints include joint limits, maximum velocities and accelerations
+% ------------------------------------------------------------------------
 % Trajectory parameters
 N = traj_par.N;
 wf = traj_par.wf;
