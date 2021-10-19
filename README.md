@@ -1,6 +1,11 @@
 # Dynamic calibration (dynamic parameter indentification) for rigid body manipulator
 The code was developed in the framework of the human-robot interaction project at [Innopolis University](https://innopolis.university/en/). One of the outputs of the project was a paper -- [Practical Aspects of Model-Based Collision Detection](https://www.frontiersin.org/articles/10.3389/frobt.2020.571574/full), where we provide some review of the recent developments in the field of dynamic calibration, outline the steps required for dynamic parameter identification and provide many useful references. If you have questions from theoretical perspective, please check the paper first. If find paper and code useful, consider citing it in your own papers.
 
+
+## Required external software
+1. [YALMIP](https://yalmip.github.io/) for formulating semidefinite programs
+2. [SDPT3](https://blog.nus.edu.sg/mattohkc/softwares/sdpt3/) for solving semidefinite programs
+
 The parameter identification prcedure can be divided into several steps:
 ## Finding regressor
 Right now, there are two ways to find regressor matrix:
