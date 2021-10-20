@@ -1,0 +1,11 @@
+# Folders with 3rd party software
+utils/YALMIP-master/
+utils/SDPT3-4.0/
+
+# Outputs of the code generator
+autogen/codegen/
+
+# Autosave Matlab Files
+*.m~
+
+
