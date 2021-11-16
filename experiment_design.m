@@ -22,25 +22,6 @@ include_motor_dynamics = 1;
 % Choose optimization algorithm: 'patternsearch', 'ga'
 optmznAlgorithm = 'patternsearch';
 
-% Getting limits on posistion and velocities. Moreover we get some
-% constant parmeters of the robot that allow us to accelerate computation
-% of the robot regressor.
-q_min = zeros(6,1); q_max = zeros(6,1); qd_max = zeros(6,1);
-for i = 1:6
-    rot_axes(:,i) = str2num(ur10.robot.joint{i}.axis.Attributes.xyz)';
-    R_pj = RPY(str2num(ur10.robot.joint{i}.origin.Attributes.rpy));
-    p_pj = str2num(ur10.robot.joint{i}.origin.Attributes.xyz)';
-    T_pj(:,:,i) = [R_pj, p_pj; zeros(1,3), 1];
-    r_com(:,i) = str2num(ur10.robot.link{i+1}.inertial.origin.Attributes.xyz)';
-    
-    q_min(i) = str2double(ur10.robot.joint{i}.limit.Attributes.lower);
-    q_max(i) = str2double(ur10.robot.joint{i}.limit.Attributes.upper);
-    qd_max(i) = str2double(ur10.robot.joint{i}.limit.Attributes.velocity);
-end
-ur10.rot_axes = rot_axes; % axis of rotation of each joint
-ur10.T_pj = T_pj;
-ur10.r_com = r_com;
-
 % Trajectory parameters
 traj_par.T = 25;          % period of signal
 traj_par.wf = 2*pi/traj_par.T;    % fundamental frequency
@@ -63,7 +44,6 @@ lb = []; ub = [];
 
 if strcmp(optmznAlgorithm, 'patternsearch')
     x0 = rand(6*2*traj_par.N,1);
-    x0 = reshape([a b], [6*2*traj_par.N, 1]); 
     optns_pttrnSrch = optimoptions('patternsearch');
     optns_pttrnSrch.Display = 'iter';
     optns_pttrnSrch.StepTolerance = 1e-1;
